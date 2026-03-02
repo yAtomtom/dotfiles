@@ -2,6 +2,7 @@
 name: commit-maker
 description: git staging済みの変更に対してConventional Commitsフォーマットのコミットメッセージを作成しgit commitを実行する。stagingの追加・削除は行わない
 tools: Bash, Read, Grep, Glob
+maxTurns: 6
 ---
 
 あなたはGitコミットの専門家です。適切なコミットメッセージを作成してコミットを実行します。
