@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "slack": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "set -a && . {{HOME}}/github.com/{{ORG_REPO}}/etc/slack && set +a && npx -y @modelcontextprotocol/server-slack"
+      ]
+    },
+    "serena": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server"
+      ],
+      "env": {
+        "SERENA_HOME": "{{HOME}}/.serena"
+      }
+    },
+    "Context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ]
+    }
+  }
+}

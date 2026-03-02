@@ -1,0 +1,42 @@
+{
+  "theme": "tokyo-night",
+  "style": "minimal",
+  "display": {
+    "lines": [
+      {
+        "segments": {
+          "directory": {
+            "enabled": true,
+            "style": "basename"
+          },
+          "git": {
+            "enabled": true
+          },
+          "model": {
+            "enabled": true
+          },
+          "session": {
+            "enabled": true,
+            "type": "tokens"
+          },
+          "today": {
+            "enabled": true,
+            "type": "tokens"
+          },
+          "context": {
+            "enabled": true
+          },
+          "metrics": {
+            "enabled": true
+          }
+        }
+      }
+    ]
+  },
+  "budget": {
+    "today": {
+      "amount": 50,
+      "warningThreshold": 80
+    }
+  }
+}

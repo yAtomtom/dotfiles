@@ -1,0 +1,41 @@
+# OS
+.DS_Store
+
+# Environment (contains org-specific secrets)
+.env
+
+# Claude Code auto-generated
+.claude/config.json
+.claude/settings.local.json
+.claude/history.jsonl
+.claude/stats-cache.json
+.claude/backups/
+.claude/cache/
+.claude/debug/
+.claude/file-history/
+.claude/ide/
+.claude/plugins/
+.claude/powerline/
+.claude/projects/
+.claude/serena/
+.claude/session-env/
+.claude/shell-snapshots/
+.claude/statsig/
+.claude/telemetry/
+.claude/todos/
+.claude/plans/
+
+# Copilot auto-generated
+.copilot/command-history-state.json
+.copilot/ide/
+.copilot/logs/
+.copilot/pkg/
+.copilot/session-state/
+
+# Backup
+.dotfiles-backup/
+
+# Serena auto-generated
+.serena/language_servers/
+.serena/logs/
+.serena/prompt_templates/

@@ -1,0 +1,64 @@
+# cage presets - Claude Code / Copilot CLI サンドボックス設定
+# 原則: ファイルシステム書き込みのみ制限（読み取り・ネットワーク・プロセスは制限対象外）
+
+presets:
+  # macOS一時ファイル・ターミナルI/O
+  tmp:
+    allow:
+      - path: "/tmp"
+        eval-symlinks: true  # macOS: /tmp -> /private/tmp
+      - "/dev/tty"
+
+  # Ruby実行環境 (bundle exec rubocop, rspec等のキャッシュ書き込み)
+  ruby:
+    allow:
+      - "$HOME/.bundle"
+      - "$HOME/.gem"
+      - "$HOME/.rbenv"
+
+  # プロジェクトディレクトリ + git操作
+  project:
+    allow:
+      - "."
+    allow-git: true
+
+  # Claude Code固有
+  claude-code:
+    allow:
+      - "$HOME/.claude"
+      - "$HOME/.claude.json"
+      - "$HOME/.claude.json.backup"
+      - "$HOME/.claude.json.lock"
+      - "$HOME/.claude.lock"
+      - "$HOME/.npm"             # npx キャッシュ用
+      - "$HOME/.cache/uv"
+      - "$HOME/.local/share/uv"
+      - "$HOME/claude-sandbox"
+    allow-keychain: true
+
+  # Copilot CLI固有
+  copilot-cli:
+    allow:
+      - "$HOME/.config/github-copilot"
+      - "$HOME/.copilot"
+      - "$HOME/.npm"             # npx キャッシュ用
+      - "$HOME/.cache/uv"
+      - "$HOME/.local/share/uv"
+      - "$HOME/.serena"
+      - "$HOME/copilot-sandbox"
+    allow-keychain: true
+
+auto-presets:
+  - command: claude
+    presets:
+      - claude-code
+      - project
+      - tmp
+      - ruby
+
+  - command: copilot
+    presets:
+      - copilot-cli
+      - project
+      - tmp
+      - ruby
