@@ -85,7 +85,6 @@
       "Bash(umount:*)",
       "Bash(cryptsetup:*)",
       "Bash(git push:*)",
-      "Bash(git commit:*)",
       "Bash(git reset:*)",
       "Bash(git rebase:*)",
       "Bash(git clean:*)",

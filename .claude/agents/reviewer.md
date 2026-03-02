@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: コードレビューを実行し、品質・セキュリティ・パフォーマンスの観点から改善提案を行う
+description: git diffやPRの差分を読み、品質・セキュリティ・パフォーマンスの観点からレビューレポートを出力する。コードの修正は行わない
 tools: Bash, Read, Grep, Glob
 ---
 

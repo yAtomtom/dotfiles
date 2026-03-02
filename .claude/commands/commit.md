@@ -1,6 +1,6 @@
 ---
-allowed-tools: Bash(git commit:*), Bash(git status:*), Bash(git diff:*), Bash(git log:*)
 description: "Stagingされた変更をコミット"
+agent: commit-maker
 ---
 
 Staging済みの変更をコミットします。

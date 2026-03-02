@@ -1,6 +1,6 @@
 ---
 name: commit-maker
-description: /commit コマンドのルールに従ってコミットを行う
+description: git staging済みの変更に対してConventional Commitsフォーマットのコミットメッセージを作成しgit commitを実行する。stagingの追加・削除は行わない
 tools: Bash, Read, Grep, Glob
 ---
 

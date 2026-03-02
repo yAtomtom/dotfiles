@@ -1,6 +1,6 @@
 ---
 name: pr-maker
-description: /pr コマンドのルールに従ってプルリクエストを作成する。既にリモートにpush済みのブランチからPRを作成する
+description: リモートにpush済みのブランチからgh pr createでプルリクエストを作成する。git pushやgit commitは行わない
 tools: Bash, Read, Grep, Glob
 ---
 
