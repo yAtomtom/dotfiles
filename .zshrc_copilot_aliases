@@ -108,3 +108,16 @@ copilot() {
     --add-dir "$HOME/copilot-sandbox" \
     "$@"
 }
+
+copilot-m() {
+  copilot_base \
+    --add-dir ./ \
+    --add-dir app \
+    --add-dir lib \
+    --add-dir spec \
+    --add-dir engines \
+    --add-dir doc \
+    --add-dir script \
+    --add-dir "$HOME/copilot-sandbox" \
+    "$@"
+}

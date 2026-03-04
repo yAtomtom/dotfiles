@@ -57,6 +57,7 @@ SYMLINK_FILES=(
   ".claude/commands/test.md"
   ".copilot/copilot-instructions.md"
   ".zshrc_copilot_aliases"
+  ".zshrc_claude_aliases"
   ".config/cage/presets.yml"
 )
 

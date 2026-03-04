@@ -1,0 +1,115 @@
+claude() {
+  local bin
+  bin=$(whence -p claude)  # zsh組み込み: 関数を無視して実際のパスを返す
+  if xattr "$bin" 2>/dev/null | rg -q 'com.apple.quarantine'; then
+    xattr -dr com.apple.quarantine "$bin"
+  fi
+  command cage -config "$HOME/.config/cage/presets.yml" claude "$@"
+}
+
+_copy_ignored_files() {
+  local src="$1" dst="$2"
+
+  # 引き継ぐ対象を明示的に列挙
+  local targets=(
+    ".claude"
+    "CLAUDE.md"
+    ".mcp.json"
+    ".serena"
+    ".github"
+    ".vscode"
+    ".ruby-version"
+    ".bundle/config"
+    ".gitignore"
+  )
+
+  echo "📋 Copying config files to worktree..."
+  local copied=false
+  for target in "${targets[@]}"; do
+    local src_path="$src/$target"
+    if [[ -e "$src_path" ]]; then
+      mkdir -p "$dst/$(dirname "$target")"
+      cp -r "$src_path" "$dst/$target" \
+        && echo "  ✅ $target" \
+        && copied=true \
+        || echo "  ⚠️  Failed: $target"
+    fi
+  done
+
+  $copied || echo "  ℹ️  No config files found to copy."
+}
+
+claudewt() {
+  local branch="${1:?Usage: claudewt <branch_name>}"
+  local confirm exit_code repo_name toplevel dir status_output
+
+  # 1. 前提条件の確認（zsh 専用: whence -p で実バイナリを確認）
+  if ! whence -p claude &> /dev/null; then
+    echo "❌ 'claude' binary not found."
+    return 1
+  fi
+
+  toplevel=$(git rev-parse --show-toplevel 2>/dev/null) \
+    || { echo "❌ Not a git repository"; return 1; }
+
+  repo_name=$(basename "$toplevel")
+  dir="$HOME/.worktrees/$repo_name/${branch//\//-}"
+
+  # 2. worktree の作成
+  echo "🌿 Preparing worktree for branch '$branch'..."
+  mkdir -p "$(dirname "$dir")"
+
+  if [[ -d "$dir" ]]; then
+    echo "⚠️  Worktree already exists at: $dir"
+    read -r "confirm?Open existing worktree? [y/N] "
+    [[ "${confirm// /}" == [yY] ]] || return 1
+  else
+    git worktree add "$dir" "$branch" 2>/dev/null \
+      || git worktree add -b "$branch" "$dir" "origin/$branch" 2>/dev/null \
+      || git worktree add -b "$branch" "$dir" \
+      || { echo "❌ Failed to create worktree for '$branch'";
+           echo "💡 For a new branch with specific base: git checkout -b $branch <base>";
+           return 1; }
+
+    _copy_ignored_files "$toplevel" "$dir"
+  fi
+
+  # 3. Claude Code の実行（zsh はサブシェルに関数を自動引き継ぎ）
+  echo "🤖 Starting Claude Code in $dir..."
+  (cd "$dir" && claude)
+  exit_code=$?
+  echo ""
+
+  # 4. 作業内容の確認とクリーンアップ
+  echo "--- Post-session Cleanup ---"
+
+  status_output=$(git -C "$dir" status --porcelain)
+
+  if [[ -n "$status_output" ]]; then
+    echo "⚠️  Detected uncommitted changes or untracked files:"
+    git -C "$dir" status --short
+    echo "💡 Claude might have left some work behind."
+    read -r "confirm?Keep this worktree? [Y/n] "
+    if [[ "${confirm// /}" == [nN] ]]; then
+      echo "🗑️  Discarding changes and removing worktree..."
+    else
+      echo "💾 Worktree preserved at: $dir"
+      echo "👉 To finish later : cd $dir && claude"
+      echo "👉 To remove       : git worktree remove $dir"
+      return $exit_code
+    fi
+  fi
+
+  # 5. worktree の削除
+  if git worktree remove --force "$dir" 2>/dev/null; then
+    echo "✅ Worktree cleaned up."
+  else
+    echo "ℹ️  Some files might remain in $dir (possibly in use)."
+  fi
+
+  # 空になった親ディレクトリを削除（2階層まで）
+  rmdir "$(dirname "$dir")" 2>/dev/null
+  rmdir "$HOME/.worktrees" 2>/dev/null
+
+  return $exit_code
+}
