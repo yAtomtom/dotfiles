@@ -1,0 +1,4 @@
+this is a test file for commit testing
+updated to verify git-memento-rewrite hook
+second update to test hook after fix
+third update to test with global settings

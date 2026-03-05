@@ -85,6 +85,9 @@
       "Bash(umount:*)",
       "Bash(cryptsetup:*)",
       "Bash(git push:*)",
+      "Bash(git memento push:*)",
+      "Bash(git memento share-notes:*)",
+      "Bash(git memento notes-sync:*)",
       "Bash(git reset:*)",
       "Bash(git rebase:*)",
       "Bash(git clean:*)",
@@ -163,6 +166,15 @@
           {
             "type": "command",
             "command": "{{HOME}}/.claude/hooks/pretooluse-guard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{HOME}}/.claude/hooks/rtk-rewrite.sh"
           }
         ]
       }
