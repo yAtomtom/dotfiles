@@ -22,9 +22,9 @@ maxTurns: 10
 3. **コミットの実行**
    - `git commit -m "message"` でコミットする
    - コミット後に `git log --oneline -1` でコミットが作成されたことを必ず確認する
-   - コミット後にセッション情報を git notes に記録する（セッションIDとサマリーのみ。トランスクリプトパスや内容はpush時の漏洩リスクがあるため記録しない）:
+   - コミット後にセッション情報を構造化メタデータとして git notes に記録する（トランスクリプトパスや内容はpush時の漏洩リスクがあるため記録しない）:
      ```bash
-     # CLAUDE_SESSION_ID が利用可能ならそちらを優先する
+     # セッションID取得
      if [ -n "${CLAUDE_SESSION_ID:-}" ]; then
        SESSION_ID="$CLAUDE_SESSION_ID"
      else
@@ -32,12 +32,26 @@ maxTurns: 10
        JSONL=$(ls -t ~/.claude/projects/*"$PROJECT_DIR_NAME"*/*.jsonl 2>/dev/null | head -1)
        SESSION_ID=$(basename -- "$JSONL" .jsonl)
      fi
+     # ファイル数取得
+     FILE_COUNT=$(git diff-tree --no-commit-id --name-only -r HEAD | wc -l | tr -d ' ')
      if [ -n "$SESSION_ID" ]; then
-       git notes append -m "claude-session: $SESSION_ID" -m "summary: <1-3文のサマリー>" HEAD
+       git notes append \
+         -m "---" \
+         -m "claude-session: $SESSION_ID" \
+         -m "type: <type>" \
+         -m "scope: <scope>" \
+         -m "intent: <判断理由>" \
+         -m "files-changed: $FILE_COUNT" \
+         -m "---" \
+         HEAD
      fi
      ```
-   - サマリーはコミット前に `git diff --cached` で分析した変更内容から、セッションで行った作業を1-3文で記述する
-   - **サマリーに含めてはいけない情報**: ファイルの絶対パス、ユーザー名、APIキー・トークン、内部ドメイン名、プロジェクト固有の機密識別子
+   - **各フィールドの記載ルール**:
+     - `type`: コミットメッセージのConventional Commitsプレフィックス（feat, fix, refactor等）をそのまま記載。形式外の場合は `other`
+     - `scope`: コミットメッセージにscope指定がある場合はそれを記載。ない場合は変更の主要ディレクトリから判断するか省略可
+     - `intent`: **コミットメッセージのwhat（何を変えたか）ではなく、why（なぜそう判断したか）を1-2文で記述する**。例: `worktree隔離でステージングが見えないため、インライン実行に切り替えた`
+     - `files-changed`: 上記bashで自動取得
+   - **記録してはいけない情報**: ファイルの絶対パス、ユーザー名、APIキー・トークン、内部ドメイン名、プロジェクト固有の機密識別子
    - git notes の追加に失敗してもコミット自体は成功しているため、エラーをレポートに含めるだけでよい
    - コミット後に `git status` を実行し、その出力をレポートにそのまま含める
 
