@@ -1,0 +1,139 @@
+#!/bin/sh
+# claude-memento: Claude Code sessions wrapper for git-memento
+# Translates "sessions get {id} --json" and "sessions list --json"
+# into memento-compatible JSON by reading ~/.claude/projects/ directly.
+#
+# Usage:
+#   git config memento.claude.bin "claude-memento"
+#   git config memento.claude.getargs "sessions get {id} --json"
+#   git config memento.claude.listargs "sessions list --json"
+
+CLAUDE_PROJECTS="${CLAUDE_PROJECTS_DIR:-$HOME/.claude/projects}"
+
+# --- sessions get {id} --json ---
+cmd_get() {
+  session_id="$1"
+  jsonl=$(find "$CLAUDE_PROJECTS" -name "${session_id}.jsonl" 2>/dev/null | head -1)
+
+  if [ -z "$jsonl" ]; then
+    echo "Session '${session_id}' not found in ${CLAUDE_PROJECTS}" >&2
+    exit 1
+  fi
+
+  # Extract title and convert JSONL messages to memento format in a single pass
+  python3 - "$jsonl" "$session_id" <<'PYEOF'
+import sys, json
+
+jsonl_path = sys.argv[1]
+session_id = sys.argv[2]
+
+title = None
+messages = []
+with open(jsonl_path, encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+
+        msg_type = obj.get("type", "")
+        if msg_type not in ("user", "assistant"):
+            continue
+
+        message = obj.get("message", {})
+        role    = message.get("role", msg_type)
+        content = message.get("content", "")
+
+        # content can be a string or list of content blocks
+        if isinstance(content, list):
+            parts = []
+            for block in content:
+                if isinstance(block, dict):
+                    parts.append(block.get("text", ""))
+                elif isinstance(block, str):
+                    parts.append(block)
+            content = "\n".join(p for p in parts if p)
+
+        if not isinstance(content, str):
+            content = str(content)
+
+        if content.strip():
+            # Extract title from first user message
+            if title is None and role == "user":
+                title = content.strip()[:80].replace("\n", " ")
+            messages.append({"role": role, "content": content})
+
+result = {
+    "id":       session_id,
+    "title":    title,
+    "messages": messages
+}
+print(json.dumps(result, ensure_ascii=False))
+PYEOF
+}
+
+# --- sessions list --json ---
+cmd_list() {
+  python3 - "$CLAUDE_PROJECTS" <<'PYEOF'
+import sys, json, os, glob
+
+projects_dir = sys.argv[1]
+sessions = []
+seen = set()
+
+for jsonl_path in glob.glob(os.path.join(projects_dir, "**", "*.jsonl"), recursive=True):
+    session_id = os.path.splitext(os.path.basename(jsonl_path))[0]
+    if session_id in seen:
+        continue
+    seen.add(session_id)
+
+    title = None
+    try:
+        with open(jsonl_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if obj.get("type") == "user":
+                    msg     = obj.get("message", {})
+                    content = msg.get("content", "")
+                    if isinstance(content, list):
+                        content = " ".join(
+                            c.get("text", "") for c in content if isinstance(c, dict)
+                        )
+                    if isinstance(content, str) and content.strip():
+                        title = content.strip()[:80].replace("\n", " ")
+                        break
+    except Exception:
+        pass
+
+    sessions.append({"id": session_id, "title": title})
+
+print(json.dumps(sessions, ensure_ascii=False))
+PYEOF
+}
+
+# --- argument dispatcher ---
+# Expected call patterns:
+#   claude-memento sessions get <id> --json
+#   claude-memento sessions list --json
+case "$1/$2" in
+  sessions/get)
+    cmd_get "$3"
+    ;;
+  sessions/list)
+    cmd_list
+    ;;
+  *)
+    echo "claude-memento: unknown command: $*" >&2
+    echo "Usage: claude-memento sessions {get <id> --json | list --json}" >&2
+    exit 1
+    ;;
+esac

@@ -59,6 +59,7 @@ SYMLINK_FILES=(
   ".copilot/copilot-instructions.md"
   ".zshrc_copilot_aliases"
   ".zshrc_claude_aliases"
+  ".zshrc_git_aliases"
   ".config/cage/presets.yml"
 )
 
@@ -114,6 +115,19 @@ for f in "${TEMPLATE_FILES[@]}"; do
     echo "  ERROR: failed to generate ~/$f"
     ERRORS+=("template: $f")
   fi
+done
+
+echo ""
+echo "=== Bin phase ==="
+BIN_DIR="/opt/homebrew/bin"
+for f in bin/*; do
+  name=$(basename "$f")
+  if [ -f "$BIN_DIR/$name" ]; then
+    mkdir -p "$BACKUP_DIR/bin"
+    cp -a "$BIN_DIR/$name" "$BACKUP_DIR/bin/$name" 2>/dev/null && echo "  backed up: $BIN_DIR/$name"
+  fi
+  cp "$DOT_DIR/$f" "$BIN_DIR/$name" && chmod +x "$BIN_DIR/$name"
+  echo "  installed: $BIN_DIR/$name"
 done
 
 echo ""

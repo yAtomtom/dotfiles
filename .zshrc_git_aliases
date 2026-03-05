@@ -1,0 +1,10 @@
+# --- git wrapper (notes非表示) ---
+# Apple Git 2.39ではlog.showNotes=falseが効かないためシェル関数で対応
+git() {
+  if [ "$1" = "log" ]; then
+    shift
+    command git log --no-notes "$@"
+  else
+    command git "$@"
+  fi
+}
