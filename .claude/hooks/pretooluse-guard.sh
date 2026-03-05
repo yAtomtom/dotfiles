@@ -31,6 +31,7 @@ if [[ "$tool_name" == "Bash" ]]; then
 
   # --- Git: リモート操作・ローカル破壊 ---
   [[ "$cmd" =~ git\ push ]]           && deny "git push is blocked by security hook"
+  [[ "$cmd" =~ git\ memento\ (push|share-notes|notes-sync) ]] && deny "git memento remote operation is blocked by security hook"
   [[ "$cmd" =~ git\ reset ]]          && deny "git reset is blocked by security hook"
   [[ "$cmd" =~ git\ clean ]]          && deny "git clean is blocked by security hook"
   [[ "$cmd" =~ git\ rebase ]]         && deny "git rebase is blocked by security hook"
