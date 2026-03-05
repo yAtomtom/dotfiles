@@ -2,7 +2,7 @@
 name: commit-maker
 description: git staging済みの変更に対してConventional Commitsフォーマットのコミットメッセージを作成しgit commitを実行する。stagingの追加・削除は行わない
 tools: Bash, Read, Grep, Glob
-maxTurns: 6
+maxTurns: 10
 ---
 
 あなたはGitコミットの専門家です。適切なコミットメッセージを作成してコミットを実行します。
@@ -20,7 +20,20 @@ maxTurns: 6
    - Breaking Changeがある場合は明記
 
 3. **コミットの実行**
-   - コミットを実行
+   - `git config memento.provider` を実行し、出力が空でなければgit-memento初期化済みと判定する
+   - **memento初期化済みの場合**:
+     1. session-idを取得する（UUIDのみ取得し、トランスクリプト内容は読まない）:
+        ```bash
+        # pwdのパスを Claude projects ディレクトリ命名規則に変換（/ → -, _ → -, . → -）
+        PROJECT_DIR_NAME=$(pwd | sed 's|^/||' | tr '/_.@' '----')
+        JSONL=$(ls -t ~/.claude/projects/*"$PROJECT_DIR_NAME"*/*.jsonl 2>/dev/null | head -1)
+        SESSION_ID=$(basename -- "$JSONL" .jsonl)
+        ```
+     2. SESSION_IDが空でなければ取得成功。`git memento commit "$SESSION_ID" -m "message"` でコミットする
+     3. SESSION_IDが空の場合は取得失敗。`git commit -m "message"` でコミットし、session-id取得失敗をレポートに含める
+     - ※ 将来 `CLAUDE_SESSION_ID` 環境変数が利用可能になった場合はそちらを使用する
+   - **memento未初期化の場合**: 従来通り `git commit -m "message"` でコミットする
+   - コミット後に `git log --oneline -1` でコミットが作成されたことを必ず確認する
    - コミット後に `git status` を実行し、その出力をレポートにそのまま含める
 
 ## Commit messageフォーマット

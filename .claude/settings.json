@@ -170,7 +170,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "COLUMNS=$(stty size 2>/dev/null </dev/tty | awk '{print $2}') npx -y @owloops/claude-powerline@latest"
+    "command": "COLUMNS=$(stty size 2>/dev/null </dev/tty | awk '{print $2}') claude-powerline"
   },
   "enabledPlugins": {
     "example-skills@anthropic-agent-skills": true,

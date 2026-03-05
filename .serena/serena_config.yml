@@ -123,3 +123,9 @@ symbol_info_budget: 10
 # the list of registered project paths (updated automatically).
 projects:
 - {{HOME}}/github.com/{{ORG_REPO}}
+
+# whether global memories (the "global" topic) are allowed to be deleted or edited by the agent.
+# Global memories are stored in ~/.serena/memories/global/ and shared across all projects.
+# Set to false to protect global memories from accidental modification by agents.
+# Note: We recommend tracking global memories with git.
+edit_global_memories: true
