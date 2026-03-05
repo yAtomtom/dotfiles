@@ -45,6 +45,7 @@ SYMLINK_FILES=(
   ".claude/commands/reply-review.md"
   ".claude/commands/memory.md"
   ".claude/commands/recall.md"
+  ".claude/commands/init-repo.md"
   ".claude/agents/commit-maker.md"
   ".claude/agents/pr-maker.md"
   ".claude/agents/reviewer.md"
