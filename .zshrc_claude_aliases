@@ -113,3 +113,77 @@ claudewt() {
 
   return $exit_code
 }
+
+# --- git notes (Claude session tracking) ---
+
+# git push + notes push（remote引数対応）
+gpush() {
+  local remote="origin"
+  # 第1引数がremote名なら取得（-- や -で始まるものはオプション扱い）
+  if [[ $# -ge 1 && "$1" != -* ]]; then
+    remote="$1"
+  fi
+  git push "$@" && git push "$remote" 'refs/notes/*'
+}
+
+# 初回clone時のnotes fetch設定（1回実行すればOK）
+gnotes-setup() {
+  local remote="${1:-origin}"
+  if ! git remote get-url "$remote" &>/dev/null; then
+    echo "ERROR: remote '$remote' not found"
+    return 1
+  fi
+  local existing
+  existing=$(git config --get-all "remote.$remote.fetch" | grep 'refs/notes')
+  if [[ -z "$existing" ]]; then
+    git config --add "remote.$remote.fetch" '+refs/notes/*:refs/notes/*'
+    echo "Notes fetch configured for remote '$remote'."
+  else
+    echo "Already configured for remote '$remote'."
+  fi
+}
+
+# コミット範囲のnoteカバレッジ監査
+gnotes-audit() {
+  local range="${1:?Usage: gnotes-audit <range> (e.g. main..HEAD)}"
+  local missing=0 total=0
+  for sha in $(git rev-list "$range"); do
+    total=$((total + 1))
+    if ! git notes show "$sha" &>/dev/null; then
+      echo "MISSING: $(git log --oneline -1 "$sha")"
+      missing=$((missing + 1))
+    fi
+  done
+  echo "---"
+  echo "Total: $total, Missing notes: $missing"
+}
+
+# cherry-pick時のnote移動
+gnotes-carry() {
+  local from_range="${1:?Usage: gnotes-carry <base>..<head> <onto>}"
+  local onto="${2:?Usage: gnotes-carry <base>..<head> <onto>}"
+  local from_commits onto_commits
+  from_commits=($(git rev-list --reverse "$from_range"))
+  onto_commits=($(git rev-list --reverse "$onto~${#from_commits}..$onto"))
+  if [[ ${#from_commits[@]} -ne ${#onto_commits[@]} ]]; then
+    echo "ERROR: commit count mismatch (from: ${#from_commits[@]}, onto: ${#onto_commits[@]})"
+    return 1
+  fi
+  for i in $(seq 0 $((${#from_commits[@]} - 1))); do
+    git notes copy "${from_commits[$i]}" "${onto_commits[$i]}" 2>/dev/null \
+      && echo "Copied: ${from_commits[$i]:0:8} -> ${onto_commits[$i]:0:8}" \
+      || echo "Skip (no note): ${from_commits[$i]:0:8}"
+  done
+}
+
+# 特定コミットのnote表示（引数なしでHEAD）
+gnotes-show() {
+  local ref="${1:-HEAD}"
+  git notes show "$ref" 2>/dev/null || echo "No note found for $(git rev-parse --short "$ref")"
+}
+
+# 特定コミットのnote削除
+gnotes-remove() {
+  local ref="${1:?Usage: gnotes-remove <commit>}"
+  git notes remove "$ref" && echo "Note removed from $(git rev-parse --short "$ref")"
+}

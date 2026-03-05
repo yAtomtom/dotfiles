@@ -116,6 +116,22 @@ for f in "${TEMPLATE_FILES[@]}"; do
 done
 
 echo ""
+echo "=== Git notes config phase ==="
+# git notes: rebase/amend時にnoteを自動引き継ぎ
+git config --global notes.rewriteRef 'refs/notes/*'
+git config --global notes.rewriteMode concatenate
+git config --global notes.rewrite.rebase true
+git config --global notes.rewrite.amend true
+echo "  configured: git notes rewrite settings (global)"
+
+# git-mementoが作成したローカル設定を削除（存在しなくてもエラーにならない）
+git config --local --unset notes.rewriteRef 2>/dev/null
+git config --local --unset notes.rewriteMode 2>/dev/null
+git config --local --unset notes.rewrite.rebase 2>/dev/null
+git config --local --unset notes.rewrite.amend 2>/dev/null
+echo "  cleaned up: local notes rewrite overrides (if any)"
+
+echo ""
 if [ ${#ERRORS[@]} -gt 0 ]; then
   echo "Completed with ${#ERRORS[@]} error(s):"
   for e in "${ERRORS[@]}"; do

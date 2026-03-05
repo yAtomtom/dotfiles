@@ -20,20 +20,25 @@ maxTurns: 10
    - Breaking Changeがある場合は明記
 
 3. **コミットの実行**
-   - `git config memento.provider` を実行し、出力が空でなければgit-memento初期化済みと判定する
-   - **memento初期化済みの場合**:
-     1. session-idを取得する（UUIDのみ取得し、トランスクリプト内容は読まない）:
-        ```bash
-        # pwdのパスを Claude projects ディレクトリ命名規則に変換（/ → -, _ → -, . → -）
-        PROJECT_DIR_NAME=$(pwd | sed 's|^/||' | tr '/_.@' '----')
-        JSONL=$(ls -t ~/.claude/projects/*"$PROJECT_DIR_NAME"*/*.jsonl 2>/dev/null | head -1)
-        SESSION_ID=$(basename -- "$JSONL" .jsonl)
-        ```
-     2. SESSION_IDが空でなければ取得成功。`git memento commit "$SESSION_ID" -m "message"` でコミットする
-     3. SESSION_IDが空の場合は取得失敗。`git commit -m "message"` でコミットし、session-id取得失敗をレポートに含める
-     - ※ 将来 `CLAUDE_SESSION_ID` 環境変数が利用可能になった場合はそちらを使用する
-   - **memento未初期化の場合**: 従来通り `git commit -m "message"` でコミットする
+   - `git commit -m "message"` でコミットする
    - コミット後に `git log --oneline -1` でコミットが作成されたことを必ず確認する
+   - コミット後にセッション情報を git notes に記録する（セッションIDとサマリーのみ。トランスクリプトパスや内容はpush時の漏洩リスクがあるため記録しない）:
+     ```bash
+     # CLAUDE_SESSION_ID が利用可能ならそちらを優先する
+     if [ -n "${CLAUDE_SESSION_ID:-}" ]; then
+       SESSION_ID="$CLAUDE_SESSION_ID"
+     else
+       PROJECT_DIR_NAME=$(pwd | sed 's|^/||' | tr '/_.@' '----')
+       JSONL=$(ls -t ~/.claude/projects/*"$PROJECT_DIR_NAME"*/*.jsonl 2>/dev/null | head -1)
+       SESSION_ID=$(basename -- "$JSONL" .jsonl)
+     fi
+     if [ -n "$SESSION_ID" ]; then
+       git notes append -m "claude-session: $SESSION_ID" -m "summary: <1-3文のサマリー>" HEAD
+     fi
+     ```
+   - サマリーはコミット前に `git diff --cached` で分析した変更内容から、セッションで行った作業を1-3文で記述する
+   - **サマリーに含めてはいけない情報**: ファイルの絶対パス、ユーザー名、APIキー・トークン、内部ドメイン名、プロジェクト固有の機密識別子
+   - git notes の追加に失敗してもコミット自体は成功しているため、エラーをレポートに含めるだけでよい
    - コミット後に `git status` を実行し、その出力をレポートにそのまま含める
 
 ## Commit messageフォーマット
