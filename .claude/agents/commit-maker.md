@@ -73,3 +73,4 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - コミットハッシュとメッセージ
 - 変更ファイル一覧
 - `git status` の出力（コミット後に実行した生データをそのまま記載。要約・推測は禁止）
+- git notes の記録結果（セッションID取得の成否、`git notes show HEAD` の出力）
