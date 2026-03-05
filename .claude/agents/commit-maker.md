@@ -33,7 +33,7 @@ maxTurns: 10
      git memento commit "$SESSION_ID" -m "コミットメッセージ"
      ```
    - セッションIDが取得できない場合のみ通常の `git commit -m "message"` にフォールバックする
-   - git memento の実行に失敗した場合はフォールバックせず、エラー内容をそのままレポートに含める（エラーの隠蔽を防ぐため）
+   - git memento の実行に失敗した場合は、エラー内容をそのままレポートに含める（エラーの隠蔽を防ぐため）。`git log --oneline -1` でコミットが作成されたか確認し、未作成の場合のみ通常の `git commit -m "message"` で再試行する
    - コミット後に `git log --oneline -1` でコミットが作成されたことを必ず確認する
    - コミット後に `git status` を実行し、その出力をレポートにそのまま含める
 
@@ -69,4 +69,4 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - コミットハッシュとメッセージ
 - 変更ファイル一覧
 - `git status` の出力（コミット後に実行した生データをそのまま記載。要約・推測は禁止）
-- git memento の記録結果（セッションID取得の成否、`git notes show HEAD` の出力）
+- git memento の記録結果（セッションID取得の成否、`git notes show HEAD | head -15` のメタデータ部分）
