@@ -1,10 +1,12 @@
 ---
 description: "Stagingされた変更をコミット"
-agent: commit-maker
+allowed-tools: Bash, Read, Grep, Glob
 ---
 
 Staging済みの変更をコミットします。
 作業内容は差分から判断するため、会話履歴からコミットメッセージを推測しません。
+
+@agents/commit-maker.md の手順に従ってコミットを実行してください。
 
 ## Rules
 
