@@ -20,19 +20,8 @@ maxTurns: 10
    - Breaking Changeがある場合は明記
 
 3. **コミットの実行**
-   - `git memento commit` でコミットとセッション記録を同時に行う:
-     ```bash
-     # セッションID取得
-     if [ -n "${CLAUDE_SESSION_ID:-}" ]; then
-       SESSION_ID="$CLAUDE_SESSION_ID"
-     else
-       PROJECT_DIR_NAME=$(pwd | sed 's|^/||' | tr '/_.@' '----')
-       JSONL=$(ls -t ~/.claude/projects/*"$PROJECT_DIR_NAME"*/*.jsonl 2>/dev/null | head -1)
-       SESSION_ID=$(basename -- "$JSONL" .jsonl)
-     fi
-     git memento commit "$SESSION_ID" -m "コミットメッセージ"
-     ```
-   - セッションIDが取得できない場合のみ通常の `git commit -m "message"` にフォールバックする
+   - `git commit -m "コミットメッセージ"` を実行する
+   - PreToolUse hook (`git-memento-rewrite.sh`) が自動的に `git memento commit <session_id>` にリライトするため、セッションID取得は不要
    - git memento の実行に失敗した場合は、エラー内容をそのままレポートに含める（エラーの隠蔽を防ぐため）。`git log --oneline -1` でコミットが作成されたか確認し、未作成の場合のみ通常の `git commit -m "message"` で再試行する
    - コミット後に `git log --oneline -1` でコミットが作成されたことを必ず確認する
    - コミット後に `git status` を実行し、その出力をレポートにそのまま含める
