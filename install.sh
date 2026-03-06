@@ -33,6 +33,7 @@ SYMLINK_FILES=(
   ".claude/rules/slack-mcp-notes.md"
   ".claude/hooks/pretooluse-guard.sh"
   ".claude/hooks/git-memento-rewrite.sh"
+  ".claude/hooks/rtk-rewrite.sh"
   ".claude/skills/agent-memory/SKILL.md"
   ".claude/skills/anti-human-bottleneck/SKILL.md"
   ".claude/skills/pr/SKILL.md"

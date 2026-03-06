@@ -4,6 +4,13 @@
 #
 # Requires: jq, git-memento
 # If session ID cannot be resolved, the original command passes through unchanged.
+#!/usr/bin/env bash
+# Claude Code PreToolUse hook — rewrites `git commit` to `git memento commit <session_id>`
+# so that every commit records the Claude Code session automatically.
+#
+# Requires: jq, git-memento
+# Session ID is resolved from the hook's stdin JSON (provided by Claude Code).
+# If session ID cannot be resolved, the original command passes through unchanged.
 set -uo pipefail
 
 if ! command -v jq &>/dev/null; then
@@ -30,17 +37,8 @@ if echo "$CMD" | grep -qE '(^|[;&|]\s*)git memento commit\b'; then
 fi
 
 # --- Resolve session ID ---
-if [ -n "${CLAUDE_SESSION_ID:-}" ]; then
-  SESSION_ID="$CLAUDE_SESSION_ID"
-else
-  PROJECT_DIR_NAME=$(pwd | sed 's|^/||' | tr '/_.@' '----')
-  JSONL=$(ls -t ~/.claude/projects/*"$PROJECT_DIR_NAME"*/*.jsonl 2>/dev/null | head -1)
-  if [ -n "$JSONL" ]; then
-    SESSION_ID=$(basename -- "$JSONL" .jsonl)
-  else
-    SESSION_ID=""
-  fi
-fi
+# stdin JSON contains session_id from Claude Code
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
 
 # No session ID — pass through unchanged
 if [ -z "$SESSION_ID" ]; then
