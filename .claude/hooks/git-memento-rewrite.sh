@@ -3,12 +3,6 @@
 # so that every commit records the Claude Code session automatically.
 #
 # Requires: jq, git-memento
-# If session ID cannot be resolved, the original command passes through unchanged.
-#!/usr/bin/env bash
-# Claude Code PreToolUse hook — rewrites `git commit` to `git memento commit <session_id>`
-# so that every commit records the Claude Code session automatically.
-#
-# Requires: jq, git-memento
 # Session ID is resolved from the hook's stdin JSON (provided by Claude Code).
 # If session ID cannot be resolved, the original command passes through unchanged.
 set -uo pipefail
@@ -45,9 +39,11 @@ if [ -z "$SESSION_ID" ]; then
   exit 0
 fi
 
-# --- Rewrite: git commit ... → git memento commit "$SESSION_ID" ... ---
+# --- Rewrite: git commit ... → env -u CLAUDECODE git memento commit "$SESSION_ID" ... ---
+# Unset CLAUDECODE so git-memento can invoke Claude CLI for session summary
+# without triggering nested session detection.
 # macOS sed does not support \b; use space/EOL boundary instead
-REWRITTEN=$(echo "$CMD" | sed -E "s/^git commit( |$)/git memento commit \"$SESSION_ID\"\1/" | sed -E "s/([;&|][[:space:]]*)git commit( |$)/\1git memento commit \"$SESSION_ID\"\2/g")
+REWRITTEN=$(echo "$CMD" | sed -E "s/^git commit( |$)/env -u CLAUDECODE git memento commit \"$SESSION_ID\"\1/" | sed -E "s/([;&|][[:space:]]*)git commit( |$)/\1env -u CLAUDECODE git memento commit \"$SESSION_ID\"\2/g")
 
 if [ "$CMD" = "$REWRITTEN" ]; then
   exit 0
