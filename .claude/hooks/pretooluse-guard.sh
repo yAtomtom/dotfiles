@@ -84,6 +84,7 @@ if [[ "$tool_name" == "Bash" ]]; then
   [[ "$cmd" =~ yarn\ remove ]]              && deny "yarn remove is blocked by security hook"
   [[ "$cmd" =~ gem\ uninstall ]]            && deny "gem uninstall is blocked by security hook"
   [[ "$cmd" =~ bundle\ remove ]]            && deny "bundle remove is blocked by security hook"
+  [[ "$cmd" =~ brew\ (install|upgrade) ]]   && deny "brew install/upgrade is blocked by security hook"
   [[ "$cmd" =~ brew\ uninstall ]]           && deny "brew uninstall is blocked by security hook"
   [[ "$cmd" =~ pip3?\ uninstall ]]          && deny "pip uninstall is blocked by security hook"
 

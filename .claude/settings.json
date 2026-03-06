@@ -100,6 +100,8 @@
       "Bash(pip3 uninstall:*)",
       "Bash(gem uninstall:*)",
       "Bash(bundle remove:*)",
+      "Bash(brew install:*)",
+      "Bash(brew upgrade:*)",
       "Bash(brew uninstall:*)",
       "Bash(apt remove:*)",
       "Bash(apt purge:*)",
