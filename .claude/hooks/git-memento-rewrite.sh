@@ -11,7 +11,7 @@ if ! command -v jq &>/dev/null; then
   exit 0
 fi
 
-if ! command -v git-memento &>/dev/null && ! git memento --version &>/dev/null 2>&1; then
+if ! command -v git-memento &>/dev/null; then
   exit 0
 fi
 
@@ -23,10 +23,10 @@ if [ -z "$CMD" ]; then
 fi
 
 # Only rewrite `git commit` — skip if already `git memento commit`
-if ! echo "$CMD" | grep -qE '(^|[;&|]\s*)git commit\b'; then
+if ! echo "$CMD" | grep -qE '(^|[;&|][[:space:]]*)git commit( |$)'; then
   exit 0
 fi
-if echo "$CMD" | grep -qE '(^|[;&|]\s*)git memento commit\b'; then
+if echo "$CMD" | grep -qE '(^|[;&|][[:space:]]*)git memento commit( |$)'; then
   exit 0
 fi
 
@@ -34,8 +34,8 @@ fi
 # stdin JSON contains session_id from Claude Code
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
 
-# No session ID — pass through unchanged
-if [ -z "$SESSION_ID" ]; then
+# UUIDv4 format validation (injection prevention)
+if ! echo "$SESSION_ID" | grep -qE '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'; then
   exit 0
 fi
 
