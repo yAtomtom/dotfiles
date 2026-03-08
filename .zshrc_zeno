@@ -1,0 +1,29 @@
+export ZENO_HOME=~/.config/zeno
+source ~/github.com/yuki-yano/zeno.zsh/zeno.zsh
+if [[ -n $ZENO_LOADED ]]; then
+  # ── abbrev snippet 展開（核心）──────────────────────
+  bindkey ' '    zeno-auto-snippet                    # Space: 展開
+  bindkey '^m'   zeno-auto-snippet-and-accept-line    # Enter: 展開+実行
+  bindkey -M isearch ' ' self-insert                  # isearch中はSpaceをそのまま
+
+  # ── 補完 ────────────────────────────────────────────
+  bindkey '^i'   zeno-completion                      # Tab: fzf補完
+
+  # ── スニペット操作 ───────────────────────────────────
+  bindkey '^xx'  zeno-insert-snippet                  # Ctrl-X X: 一覧から挿入
+  bindkey '^x '  zeno-insert-space                    # Ctrl-X Space: 展開せずスペース
+  bindkey '^x^m' accept-line                          # Ctrl-X Enter: 展開せず実行
+  bindkey '^x^z' zeno-toggle-auto-snippet             # Ctrl-X Ctrl-Z: toggle
+  bindkey '^x^f' zeno-snippet-next-placeholder        # Ctrl-X Ctrl-F: {{}}へ移動
+
+  # ── 履歴 ────────────────────────────────────────────
+  bindkey '^r'   zeno-history-selection               # Ctrl-R: 通常履歴
+  # bindkey '^r' zeno-smart-history-selection         # ↑ experimental版に切替可
+
+  # ── preprompt ───────────────────────────────────────
+  bindkey '^xp'  zeno-preprompt                       # Ctrl-X P: プレフィックス設定
+  bindkey '^xs'  zeno-preprompt-snippet               # Ctrl-X S: スニペットから設定
+
+  # ── ghq連携（ghqユーザーのみ）───────────────────────
+  # bindkey '^xg' zeno-ghq-cd                         # Ctrl-X G: ghqリポジトリへcd
+fi

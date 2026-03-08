@@ -1,0 +1,19 @@
+# AI-powered shell functions
+
+aicommit() {
+  if git diff --cached --quiet; then
+    echo "No staged changes." >&2
+    return 1
+  fi
+
+  local commitmsg
+  commitmsg=$(git diff --cached | claude --no-session-persistence --print \
+    'Generate ONLY a one-line Git commit message in English using imperative mood. The message should summarize what was changed and why, based strictly on the staged diff provided via stdin. DO NOT add an explanation or a body. Output ONLY the commit summary line.')
+
+  if [[ -z "$commitmsg" ]]; then
+    echo "Failed to generate commit message." >&2
+    return 1
+  fi
+
+  git commit -m "$commitmsg" -e
+}

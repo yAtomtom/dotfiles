@@ -1,7 +1,7 @@
 ---
 name: state-first-design
 description: "設計・実装作業を行う際に参照する設計原則。新機能の追加・既存機能の変更・コードレビュー・設計ドキュメントの作成など、実装前に必ず参照すること。操作より状態・性質を先に定義するアプローチ、状態と性質の区別、不変条件（Invariant）の明示、事前条件・事後条件の定義方法を含む。"
-user-invokable: false
+user-invocable: false
 ---
 
 # 設計原則：状態・性質ファースト（State & Property First Design）

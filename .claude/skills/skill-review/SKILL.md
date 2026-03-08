@@ -1,7 +1,7 @@
 ---
 name: skill-review
 description: "スキルの新規作成・修正・レビュー時にプロジェクト固有の設計指針を適用する。スキルの設計をレビューしたい、スキルを作りたい、SKILL.mdを書きたい、スキルの品質を確認したい、といった場面で使用する。example-skills:skill-creatorと併用可能。"
-user-invokable: false
+user-invocable: false
 ---
 
 # Skill Review

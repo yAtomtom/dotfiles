@@ -1,7 +1,7 @@
 ---
 name: agent-memory
 description: "セッションの作業状態を保存・復元するためのツール。プロジェクト知識の保存（→ remember）や過去の決定事項の参照（→ recall）には使わない。以下のような場面で使用する：「前回の続きから」「前の続き」「continue from last time」（作業の再開）、「今日はここまで」「あとで続きやる」「作業状態を保存」（作業の中断）、「昨日どこまで進んだっけ？」（進捗の確認、ただしプロジェクト知識ではなく作業文脈の復元）。作業の中断・再開に特化し、セッション間で失われる作業文脈を保持する。"
-user-invokable: false
+user-invocable: false
 metadata:
   author: yoshizawa_atomu
   version: 1.0.0

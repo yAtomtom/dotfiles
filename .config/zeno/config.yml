@@ -1,0 +1,16 @@
+snippets:
+  - name: claude code
+    keyword: cl
+    snippet: claude
+
+  - name: claude code worktree
+    keyword: clwt
+    snippet: claudewt
+
+  - name: copilot chat
+    keyword: cp-m
+    snippet: copilot-m
+
+  - name: ai commit
+    keyword: aic
+    snippet: aicommit

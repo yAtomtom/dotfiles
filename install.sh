@@ -62,6 +62,9 @@ SYMLINK_FILES=(
   ".zshrc_copilot_aliases"
   ".zshrc_claude_aliases"
   ".zshrc_git_aliases"
+  ".zshrc_zeno"
+  ".zshrc_ai"
+  ".config/zeno/config.yml"
   ".config/cage/presets.yml"
 )
 
