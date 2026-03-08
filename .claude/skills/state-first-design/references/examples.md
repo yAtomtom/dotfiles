@@ -19,6 +19,39 @@ isConvertibleFormat(file.type)    // 性質のみ → 副作用なし・テス�
 isReadyToConvert(file)            // 状態を別レイヤーで扱う
 ```
 
+### DBクエリでの混在
+
+**Bad: 論理削除(状態)と作成者(性質)が同じクエリ条件に混在**
+```
+findActiveItemsByCreator(userId, isDeleted)
+//                       ^^^^^^  ^^^^^^^^^
+//                       性質     状態（混在している）
+```
+
+**Good: 性質によるスコープと状態によるフィルタを分離**
+```
+scopeByCreator(userId)           // 性質のみ → 誰が作ったかは変わらない
+filterActive(items)              // 状態のみ → 削除状態は変化する
+```
+
+### UIコンポーネントでの混在
+
+**Bad: 表示バリアント(性質)とローディング状態(状態)が同一propsに混在**
+```
+<Button variant="primary" isLoading={true} disabled={!canSubmit} />
+//      ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+//      性質               状態             操作の可否（状態+性質の合成）
+```
+
+**Good: 性質(見た目)と状態(振る舞い)を分離して管理**
+```
+// 性質: 変わらない見た目の定義
+const buttonStyle = resolveVariant("primary")
+
+// 状態: 変化する振る舞いの定義
+const buttonState = deriveButtonState({ isLoading, canSubmit })
+```
+
 ---
 
 ## 設計提案・変更提案のフォーマット
