@@ -93,6 +93,14 @@ git commit
 2. リポジトリからファイルを削除する: `git rm .path/to/file`
 3. `$HOME` 配下の symlink またはファイルを手動で削除する
 
+### zeno snippet を編集した場合
+
+`.config/zeno/config.yml` は symlink のためファイル変更は即反映されるが、zeno はソケットサーバー経由で設定を読み込むためサーバーの再起動が必要。
+
+```bash
+zeno-stop-server && zeno-start-server
+```
+
 ### 自動生成ディレクトリが増えた場合
 
 各ツールのバージョンアップで新しい自動生成ディレクトリが追加されることがある。`git status` に意図しないファイルが表示された場合は `.gitignore` に追加する。
