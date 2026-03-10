@@ -15,9 +15,9 @@ maxTurns: 10
    - 変更の意図と影響範囲を理解
 
 2. **コミットメッセージの作成**
-   - Conventional Commitsフォーマットに従う
+   - 下記「Commit messageフォーマット」セクションに従う
    - 明確で簡潔な説明を記述
-   - Breaking Changeがある場合は明記
+   - Breaking Changeがある場合は `!` 短縮記法または `BREAKING CHANGE:` footerで明記
 
 3. **コミットの実行**
    - `git commit -m "コミットメッセージ"` を実行する
@@ -28,9 +28,42 @@ maxTurns: 10
 
 ## Commit messageフォーマット
 
+### テンプレート
 - カレントリポジトリのルートに`.gitmessage`がある場合はそれをテンプレートとして使用する
 - ない場合は`~/.config/git/message`をテンプレートとして使用する
+- いずれも存在しない場合は以下のtype/形式ルールに従う
 - 過去の変更とコミットメッセージの傾向を`git log`を用いて確認する
+
+### 形式（Conventional Commits + @commitlint/config-conventional）
+
+```
+<type>(<scope>): <subject>
+
+[body]
+
+[footer(s)]
+```
+
+#### type（commitlint config-conventional準拠、11種）
+
+| type | 用途 |
+|---|---|
+| `feat` | 新機能 |
+| `fix` | バグ修正 |
+| `docs` | ドキュメントのみの変更 |
+| `style` | コードの意味に影響しないスタイル変更（空白、フォーマット等） |
+| `refactor` | バグ修正でも機能追加でもないコード変更 |
+| `perf` | パフォーマンス改善 |
+| `test` | テストの追加・修正 |
+| `build` | ビルドシステムや外部依存の変更 |
+| `ci` | CI設定の変更 |
+| `chore` | 上記いずれにも該当しない雑務 |
+| `revert` | コミットの取消 |
+
+#### breaking change
+- `!` 短縮記法: `feat!: remove deprecated API` （headerで明示）
+- footer記法: `BREAKING CHANGE: <description>` （詳細な説明が必要な場合）
+- 両方を併用してもよい
 
 ## コミットメッセージ末尾
 
