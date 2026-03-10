@@ -1,6 +1,6 @@
 ---
 name: pr
-description: Create a pull request
+description: "プルリクエストを作成する。Use when user says /pr, 'PRを作って', 'プルリクエストを作成'. Do NOT use for commit, push, or branch operations."
 disable-model-invocation: true
 allowed-tools: Bash(gh *), Bash(git *)
 ---
