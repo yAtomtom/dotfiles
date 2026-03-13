@@ -36,6 +36,9 @@ if [[ "$tool_name" == "Bash" ]]; then
   [[ "$cmd" =~ git\ clean ]]          && deny "git clean is blocked by security hook"
   [[ "$cmd" =~ git\ rebase ]]         && deny "git rebase is blocked by security hook"
   [[ "$cmd" =~ git\ checkout\ -- ]]   && deny "git checkout -- is blocked by security hook"
+  # git checkout/switch to master/main (but allow -b for new branch creation)
+  [[ "$cmd" =~ git\ checkout\ (master|main)(\ |$) ]] && ! [[ "$cmd" =~ git\ checkout\ -b\  ]] && deny "git checkout master/main is blocked by security hook"
+  [[ "$cmd" =~ git\ switch\ (master|main)(\ |$) ]]   && deny "git switch master/main is blocked by security hook"
 
   # --- ネットワーク送信 ---
   [[ "$cmd" =~ (^|[;\|&\ ])curl\  ]]  && deny "curl is blocked by security hook"
@@ -126,6 +129,14 @@ case "$tool_name" in
     deny "Figma write operation requires user confirmation outside of hooks"
     ;;
 esac
+
+# =============================================================================
+# MCP config file protection
+# =============================================================================
+if [[ "$tool_name" == "Write" || "$tool_name" == "Edit" ]]; then
+  file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
+  [[ "$file_path" =~ (^|/)\.?mcp\.json$ ]] && deny "MCP config file modification is blocked by security hook. Get user approval first."
+fi
 
 # =============================================================================
 # Allow: 何も出力せず exit 0
