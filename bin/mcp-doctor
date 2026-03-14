@@ -1,0 +1,158 @@
+#!/bin/sh
+# mcp-doctor: Pre-flight check for MCP server prerequisites
+# Parses .mcp.json and validates that binaries, env files, and key files exist.
+#
+# Usage:
+#   mcp-doctor                     # Check $PWD/.mcp.json
+#   mcp-doctor /path/to/.mcp.json  # Check specific file
+#
+# Exit: 0 if all checks pass, 1 if any fail
+set -u
+
+# --- Dependency check ---
+if ! command -v jq >/dev/null 2>&1; then
+  echo "ERROR: jq is required but not found" >&2
+  exit 1
+fi
+
+# --- Resolve target file ---
+MCP_FILE="${1:-$PWD/.mcp.json}"
+if [ ! -f "$MCP_FILE" ]; then
+  echo "No .mcp.json found at: $MCP_FILE" >&2
+  exit 1
+fi
+
+# --- Validate JSON ---
+if ! jq empty "$MCP_FILE" 2>/dev/null; then
+  echo "ERROR: Invalid JSON in $MCP_FILE" >&2
+  exit 1
+fi
+
+echo "Checking: $MCP_FILE"
+echo "---"
+
+FAIL_COUNT=0
+
+# --- Check for mcpServers ---
+SERVER_COUNT=$(jq -r '.mcpServers // {} | keys | length' "$MCP_FILE" 2>/dev/null)
+if [ "$SERVER_COUNT" = "0" ] || [ -z "$SERVER_COUNT" ]; then
+  echo "No mcpServers found in $MCP_FILE"
+  exit 0
+fi
+
+check_file() {
+  local label="$1" path="$2"
+  if [ ! -e "$path" ]; then
+    printf "  %s not found: %s\n" "$label" "$path"
+    return 1
+  elif [ ! -r "$path" ]; then
+    printf "  %s not readable: %s\n" "$label" "$path"
+    return 1
+  fi
+  return 0
+}
+
+while IFS= read -r SERVER; do
+  ISSUES=""
+
+  # Extract command, args, and env in a single jq call
+  SERVER_JSON=$(jq -c ".mcpServers[\"$SERVER\"]" "$MCP_FILE")
+  CMD=$(echo "$SERVER_JSON" | jq -r '.command // empty')
+
+  # --- Check 1: Top-level command binary ---
+  if [ -n "$CMD" ]; then
+    if ! command -v "$CMD" >/dev/null 2>&1; then
+      ISSUES="${ISSUES}  binary not found: $CMD\n"
+    fi
+  fi
+
+  # --- Check 2: sh -c wrapper analysis ---
+  if [ "$CMD" = "sh" ]; then
+    SH_SCRIPT=$(echo "$SERVER_JSON" | jq -r '.args[1] // empty')
+
+    if [ -n "$SH_SCRIPT" ]; then
+      # Check for sourced env files: ". /path/to/file" or "source /path/to/file"
+      for ENV_FILE in $(echo "$SH_SCRIPT" | grep -oE '\. /[^ ;&|]+' | sed 's/^\. //'); do
+        if [ ! -f "$ENV_FILE" ]; then
+          ISSUES="${ISSUES}  env source file not found: $ENV_FILE\n"
+        elif [ ! -r "$ENV_FILE" ]; then
+          ISSUES="${ISSUES}  env source file not readable: $ENV_FILE\n"
+        fi
+      done
+
+      # Extract the actual binary (npx, uvx, etc.)
+      INNER_BIN=$(echo "$SH_SCRIPT" | grep -oE '(npx|uvx|node|python3?|bun|bunx)\b' | tail -1)
+      if [ -n "$INNER_BIN" ]; then
+        if ! command -v "$INNER_BIN" >/dev/null 2>&1; then
+          ISSUES="${ISSUES}  inner binary not found: $INNER_BIN\n"
+        fi
+      fi
+
+      # Detect complex patterns we cannot parse
+      if echo "$SH_SCRIPT" | grep -qE '\$\{|\$\(' ; then
+        ISSUES="${ISSUES}  [SKIP] contains variable expansion — manual check recommended\n"
+      fi
+    fi
+  fi
+
+  # --- Check 3: env field file paths (heredoc to avoid subshell) ---
+  ENV_ENTRIES=$(echo "$SERVER_JSON" | jq -r '.env // {} | to_entries[] | "\(.key)\t\(.value)"' 2>/dev/null)
+  if [ -n "$ENV_ENTRIES" ]; then
+    while IFS="$(printf '\t')" read -r KEY VALUE; do
+      case "$KEY" in
+        SSL_CERT_FILE|CA_CERT_FILE|NODE_EXTRA_CA_CERTS|GOOGLE_APPLICATION_CREDENTIALS)
+          if [ -n "$VALUE" ]; then
+            MSG=$(check_file "$KEY file" "$VALUE" 2>&1) || ISSUES="${ISSUES}${MSG}\n"
+          fi
+          ;;
+        *)
+          case "$VALUE" in
+            /*.[jp][se][om]|/*.[cy][re][tm]|/*.[yj][ms]l)
+              MSG=$(check_file "env file ($KEY)" "$VALUE" 2>&1) || ISSUES="${ISSUES}${MSG}\n"
+              ;;
+          esac
+          ;;
+      esac
+    done <<EOF
+$ENV_ENTRIES
+EOF
+  fi
+
+  # --- Check 4: args file paths (heredoc to avoid subshell) ---
+  ARGS_LIST=$(echo "$SERVER_JSON" | jq -r '.args // [] | .[]')
+  if [ -n "$ARGS_LIST" ]; then
+    PREV_ARG=""
+    while IFS= read -r ARG; do
+      case "$PREV_ARG" in
+        --key-file|--credentials|--cert|--ca-cert)
+          if [ -n "$ARG" ]; then
+            MSG=$(check_file "$PREV_ARG file" "$ARG" 2>&1) || ISSUES="${ISSUES}${MSG}\n"
+          fi
+          ;;
+      esac
+      PREV_ARG="$ARG"
+    done <<EOF
+$ARGS_LIST
+EOF
+  fi
+
+  # --- Report ---
+  if [ -z "$ISSUES" ]; then
+    printf "✓ %s\n" "$SERVER"
+  else
+    printf "✗ %s\n" "$SERVER"
+    printf "%b" "$ISSUES"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+  fi
+done <<EOF
+$(jq -r '.mcpServers // {} | keys[]' "$MCP_FILE" 2>/dev/null)
+EOF
+
+echo "---"
+if [ "$FAIL_COUNT" -gt 0 ]; then
+  echo "$FAIL_COUNT server(s) with issues"
+  exit 1
+else
+  echo "All servers OK"
+  exit 0
+fi
