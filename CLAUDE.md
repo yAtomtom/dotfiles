@@ -18,6 +18,10 @@ cp .env.example .env && vi .env
 
 # シェルスクリプトの lint
 shellcheck install.sh export.sh
+
+# MCP サーバーの前提条件チェック
+mcp-doctor                     # カレントディレクトリの .mcp.json
+mcp-doctor /path/to/.mcp.json  # 指定ファイル
 ```
 
 ## Architecture
@@ -48,6 +52,7 @@ shellcheck install.sh export.sh
 | `.serena/` | Serena（プロジェクト設定） |
 | `.config/cage/` | cage サンドボックスプリセット |
 | `.faceted/` | faceted-prompting（エージェント・スキルの生成元） |
+| `bin/` | CLI ツール（mcp-doctor 等、`install.sh` で `/opt/homebrew/bin/` にデプロイ） |
 
 ### faceted-prompting によるエージェント・スキル管理
 
