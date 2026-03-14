@@ -1,0 +1,7 @@
+# Workaround: zsh 5.9 + zsh-syntax-highlighting 0.8.0
+# ${(kv)options[@]} が ZLE 補完コンテキストで奇数要素を返すバグの回避
+# TODO: zsh-syntax-highlighting の upstream 修正後に削除
+if (( $+functions[_zsh_highlight] )) && (( ! $+functions[_zsh_highlight_orig] )); then
+  functions[_zsh_highlight_orig]="$functions[_zsh_highlight]"
+  _zsh_highlight() { _zsh_highlight_orig "$@" 2>/dev/null; }
+fi
