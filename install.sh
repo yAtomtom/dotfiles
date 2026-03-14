@@ -30,6 +30,7 @@ SYMLINK_FILES=(
   ".claude/rules/context7-mcp.instructions.md"
   ".claude/rules/notion-mcp.instructions.md"
   ".claude/rules/figma-mcp-notes.md"
+  ".claude/rules/plan-frontmatter.md"
   ".claude/hooks/pretooluse-guard.sh"
   ".claude/hooks/git-memento-rewrite.sh"
   ".claude/hooks/rtk-rewrite.sh"
@@ -178,6 +179,7 @@ for pair in \
   "commands:$HOME/.claude/commands" \
   "rules:$HOME/.claude/rules" \
   "instructions:$HOME/.claude/instructions" \
+  "hooks:$HOME/.claude/hooks" \
 ; do
   name="${pair%%:*}"
   target="${pair#*:}"
