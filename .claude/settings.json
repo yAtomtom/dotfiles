@@ -199,6 +199,6 @@
     "example-skills@anthropic-agent-skills": true,
     "document-skills@anthropic-agent-skills": true
   },
-  "effortLevel": "low",
+  "effortLevel": "high",
   "cleanupPeriodDays": 9999
 }
