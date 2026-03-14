@@ -16,7 +16,7 @@
 ## レビュー実行コマンド
 
 ```bash
-command copilot --model "gpt-5.2-codex" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<対象ファイル名> をレビューしてください"
+command copilot --model "gpt-5.3-codex" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<対象ファイル名> をレビューしてください"
 ```
 
 ## 判定の扱い

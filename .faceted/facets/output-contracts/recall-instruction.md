@@ -19,7 +19,7 @@
 1. **ノートを検索**: Bash で `ls ~/.claude/notes/*.md` → ファイル名で関連判断 → 関連ファイルを Read
 2. **ノートに情報がない場合、外部ソースを並行して検索**:
    - Notion: `mcp__claude_ai_Notion__notion-search`
-   - Slack: `mcp__slack-unicorn__slack_get_channel_history`
+   - Slack: `mcp__{{SLACK_MCP_NAME}}__slack_get_channel_history`
    - GitHub: gh CLI
 3. **すべて見つからない場合のみ**「該当する情報は見つかりませんでした」と伝える
 
@@ -31,7 +31,7 @@
 
 | タグ | アクション |
 |------|-----------|
-| `[Slack]` | mcp__slack-unicorn__* でスレッドを取得 |
+| `[Slack]` | mcp__{{SLACK_MCP_NAME}}__* でスレッドを取得 |
 | `[Notion]` | mcp__claude_ai_Notion__notion-search でページを取得 |
 | `[GitHub]` | gh CLI で Issue/PR を確認 |
 | `[Code]` | Read / Grep でコードを確認 |

@@ -7,8 +7,8 @@ prompt-review スキル用データ収集スクリプト
 使い方:
     python collect.py                          # 全プロジェクト、全期間
     python collect.py --days 30                # 過去30日分
-    python collect.py --project yonshogen      # 特定プロジェクト
-    python collect.py --project yonshogen --days 30
+    python collect.py --project your-project      # 特定プロジェクト
+    python collect.py --project your-project --days 30
 """
 
 import argparse
@@ -195,7 +195,7 @@ def collect_claude_code(cutoff_ms: int | None, project_filter: str | None) -> di
                 continue
 
             # プロジェクトフィルタ: ディレクトリ名からプロジェクト名を復元
-            # 例: "c--Users-shinta-Documents-GitHub-yonshogen" → 末尾部分を取得
+            # 例: "c--Users-shinta-Documents-GitHub-your-project" → 末尾部分を取得
             dir_name = project_dir.name
             project_name_from_dir = dir_name.rsplit("-", 1)[-1] if "-" in dir_name else dir_name
             if project_filter and project_filter.lower() not in project_name_from_dir.lower():

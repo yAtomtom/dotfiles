@@ -11,7 +11,7 @@
     }
   ],
   "render_markdown": true,
-  "model": "gpt-5.2-codex",
+  "model": "gpt-5.3-codex",
   "reasoning_effort": "low",
   "trusted_folders": [
     "{{HOME}}/github.com/{{ORG_REPO}}"

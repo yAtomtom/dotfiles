@@ -57,7 +57,7 @@
 
 ### パスエンコード規則
 プロジェクトディレクトリ名は、元のパスの `\`, `/`, `:` を `-` に変換。
-例: `C:\Users\shinta\Documents\GitHub\yonshogen` → `c--Users-shinta-Documents-GitHub-yonshogen`
+例: `C:\Users\shinta\Documents\GitHub\your-project` → `c--Users-shinta-Documents-GitHub-your-project`
 
 ---
 

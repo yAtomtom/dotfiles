@@ -15,7 +15,7 @@ fi
 # shellcheck source=/dev/null
 . "$ENV_FILE"
 
-for var in ORG_REPO GCP_PROJECT GCP_KEY_FILE ORG_CA_CERT; do
+for var in ORG_REPO GCP_PROJECT GCP_KEY_FILE ORG_CA_CERT SLACK_MCP_NAME SLACK_TEST_CHANNEL; do
   if [ -z "${!var:-}" ]; then
     echo "ERROR: $var is not set in .env"
     exit 1
@@ -30,7 +30,6 @@ SYMLINK_FILES=(
   ".claude/rules/context7-mcp.instructions.md"
   ".claude/rules/notion-mcp.instructions.md"
   ".claude/rules/figma-mcp-notes.md"
-  ".claude/rules/slack-mcp-notes.md"
   ".claude/hooks/pretooluse-guard.sh"
   ".claude/hooks/git-memento-rewrite.sh"
   ".claude/hooks/rtk-rewrite.sh"
@@ -42,7 +41,6 @@ SYMLINK_FILES=(
   ".claude/skills/prompt-review/scripts/collect.py"
   ".claude/skills/prompt-review/references/data-sources.md"
   ".claude/skills/prompt-review/references/report-template.md"
-  ".claude/skills/recall/SKILL.md"
   ".claude/skills/remember/SKILL.md"
   ".claude/commands/commit.md"
   ".claude/commands/pr.md"
@@ -77,6 +75,8 @@ SYMLINK_FILES=(
 # template 対象
 TEMPLATE_FILES=(
   ".claude/settings.json"
+  ".claude/rules/slack-mcp-notes.md"
+  ".claude/skills/recall/SKILL.md"
   ".copilot/config.json"
   ".copilot/mcp-config.json"
   ".serena/serena_config.yml"
@@ -115,11 +115,15 @@ echo ""
 echo "=== Template phase ==="
 for f in "${TEMPLATE_FILES[@]}"; do
   mkdir -p "$HOME/$(dirname "$f")"
+  # 旧 symlink が残っていると sed の出力先がリポジトリを破壊するため事前に除去
+  [ -L "$HOME/$f" ] && rm "$HOME/$f"
   if sed -e "s|{{HOME}}|$HOME|g" \
          -e "s|{{ORG_REPO}}|$ORG_REPO|g" \
          -e "s|{{GCP_PROJECT}}|$GCP_PROJECT|g" \
          -e "s|{{GCP_KEY_FILE}}|$GCP_KEY_FILE|g" \
          -e "s|{{ORG_CA_CERT}}|$ORG_CA_CERT|g" \
+         -e "s|{{SLACK_MCP_NAME}}|$SLACK_MCP_NAME|g" \
+         -e "s|{{SLACK_TEST_CHANNEL}}|$SLACK_TEST_CHANNEL|g" \
          "$DOT_DIR/$f" > "$HOME/$f" 2>/dev/null; then
     echo "  generated: ~/$f"
   else
@@ -139,6 +143,64 @@ for f in bin/*; do
   fi
   cp "$DOT_DIR/$f" "$BIN_DIR/$name" && chmod +x "$BIN_DIR/$name"
   echo "  installed: $BIN_DIR/$name"
+done
+
+echo ""
+echo "=== Notes repo phase ==="
+CLAUDE_NOTES_REPO="$HOME/github.com/yAtomtom/claude-notes"
+if [ -d "$CLAUDE_NOTES_REPO" ]; then
+  if [ -L "$HOME/.claude/notes" ]; then
+    echo "  already linked: ~/.claude/notes"
+  elif [ -d "$HOME/.claude/notes" ]; then
+    echo "  WARN: ~/.claude/notes is a real directory, not a symlink"
+    echo "  migrate manually: mv ~/.claude/notes/* $CLAUDE_NOTES_REPO/ && rmdir ~/.claude/notes"
+  else
+    mkdir -p "$HOME/.claude"
+    ln -snf "$CLAUDE_NOTES_REPO" "$HOME/.claude/notes"
+    echo "  linked: ~/.claude/notes -> $CLAUDE_NOTES_REPO"
+  fi
+else
+  echo "  SKIP: $CLAUDE_NOTES_REPO not found (clone the repo first)"
+fi
+
+echo ""
+echo "=== Obsidian vault phase ==="
+OBSIDIAN_VAULT="$HOME/obsidian-claude"
+mkdir -p "$OBSIDIAN_VAULT"
+
+# ディレクトリ symlink
+for pair in \
+  "notes:$HOME/.claude/notes" \
+  "sandbox:$HOME/claude-sandbox" \
+  "plans:$HOME/.claude/plans" \
+  "agents:$HOME/.claude/agents" \
+  "skills:$HOME/.claude/skills" \
+  "commands:$HOME/.claude/commands" \
+  "rules:$HOME/.claude/rules" \
+  "instructions:$HOME/.claude/instructions" \
+; do
+  name="${pair%%:*}"
+  target="${pair#*:}"
+  if [ -d "$target" ] || [ -L "$target" ]; then
+    ln -snf "$target" "$OBSIDIAN_VAULT/$name"
+    echo "  linked: $OBSIDIAN_VAULT/$name -> $target"
+  else
+    echo "  SKIP (not found): $target"
+  fi
+done
+
+# ファイル symlink
+ln -snf "$HOME/.claude/CLAUDE.md" "$OBSIDIAN_VAULT/CLAUDE.md"
+echo "  linked: $OBSIDIAN_VAULT/CLAUDE.md -> ~/.claude/CLAUDE.md"
+
+# プロジェクトメモリ（projects/*/memory/ のみを個別リンク）
+mkdir -p "$OBSIDIAN_VAULT/memory"
+for memdir in "$HOME"/.claude/projects/*/memory; do
+  if [ -d "$memdir" ]; then
+    project_name="$(basename "$(dirname "$memdir")")"
+    ln -snf "$memdir" "$OBSIDIAN_VAULT/memory/$project_name"
+    echo "  linked: $OBSIDIAN_VAULT/memory/$project_name -> $memdir"
+  fi
 done
 
 echo ""

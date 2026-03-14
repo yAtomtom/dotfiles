@@ -16,7 +16,7 @@ context: fork
 
 - 数値のみ → **日数フィルタ**（例: `30` → 過去30日分）
 - 文字列のみ → **プロジェクト名フィルタ**（部分一致）
-- 文字列 + 数値 → **プロジェクト名** + **日数フィルタ**（例: `yonshogen 30`）
+- 文字列 + 数値 → **プロジェクト名** + **日数フィルタ**（例: `your-project 30`）
 - 引数なし → 全プロジェクト横断、過去7日分（デフォルト）
 
 ## ステップ1: データ収集（スクリプト実行）
@@ -36,8 +36,8 @@ python ~/.claude/skills/prompt-review/scripts/collect.py [OPTIONS] > /tmp/prompt
 - 引数なし → オプションなし（デフォルト: 過去7日分）
 - 数値のみ（例: `30`） → `--days 30`
 - `all` または `0` → `--days 0`（全期間）
-- 文字列のみ（例: `yonshogen`） → `--project yonshogen`
-- 文字列 + 数値（例: `yonshogen 30`） → `--project yonshogen --days 30`
+- 文字列のみ（例: `your-project`） → `--project your-project`
+- 文字列 + 数値（例: `your-project 30`） → `--project your-project --days 30`
 
 **重要**: スクリプトのパスは、このスキルファイルからの相対パスではなく、スキルが格納されているプロジェクトの `.claude/skills/prompt-review/scripts/collect.py` の絶対パスを使うこと。現在の作業ディレクトリ（`cwd`）を基準に `.claude/skills/prompt-review/scripts/collect.py` を指定する。
 
@@ -59,14 +59,14 @@ python ~/.claude/skills/prompt-review/scripts/collect.py [OPTIONS] > /tmp/prompt
       "tool": "Claude Code",
       "status": "検出",
       "messages": [
-        {"text": "プロンプト本文", "timestamp": "2025-09-29 03:16", "project": "yonshogen"}
+        {"text": "プロンプト本文", "timestamp": "2025-09-29 03:16", "project": "your-project"}
       ],
       "period": "2025-09-29 03:16 〜 2026-03-12 04:58"
     }
   ],
   "project_stats": {
     "farbrain": {"count": 668, "tools": ["Claude Code"]},
-    "yonshogen": {"count": 215, "tools": ["Claude Code"]}
+    "your-project": {"count": 215, "tools": ["Claude Code"]}
   },
   "secret_warnings": [
     {

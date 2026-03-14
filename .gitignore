@@ -32,6 +32,9 @@
 .copilot/pkg/
 .copilot/session-state/
 
+# prompt-review reports (contains org-specific details)
+.claude/skills/prompt-review/reports/
+
 # Backup
 .dotfiles-backup/
 

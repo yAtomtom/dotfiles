@@ -37,3 +37,23 @@ rg "検索語" ~/.local/share/claude/memories/
 - 日本語OK、スペースは `-` に置換
 - 良い例: `causal-impact.md`, `api-設計.md`
 - 悪い例: `2026-01-27.md`, `memo-1.md`
+
+## remember のファイル形式
+
+```markdown
+---
+source: "[タグ]"
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+
+## [タグ] 簡潔な見出し
+
+[内容]
+
+---
+```
+
+- 新規作成時: `created` と `updated` に作成日を設定
+- 既存ノートへの追記時: `updated` のみ更新。frontmatter が存在しない場合は追加してから追記
+- `source` は情報源タグ（`[Claude]`, `[Slack]`, `[Slack+Notion]` 等）を設定

@@ -20,7 +20,15 @@
 
 ## フォーマット
 
+新規作成時は frontmatter を付与する。既存ノートへの追記時は `updated` のみ更新し、frontmatter がなければ追加する。
+
 ```markdown
+---
+source: "[タグ]"
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+
 ## [タグ] 簡潔な見出し
 
 [内容]
