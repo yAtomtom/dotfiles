@@ -1,5 +1,5 @@
 name: agent-memory
-description: "セッションの作業状態を保存・復元する"
+description: "セッションの作業状態を保存・復元する。「前回の続きから」「作業状態を保存」「昨日どこまで進んだっけ？」のような中断・再開の場面で使用する。プロジェクト知識の保存（→ remember）や過去の決定事項の参照（→ recall）には使わない。"
 persona: knowledge-curator
 knowledge:
   - memex-storage
