@@ -1,0 +1,8 @@
+name: developer
+description: "設計ドキュメントに基づきKISS原則と関数型プログラミングの思想で実装を行う"
+persona: code-practitioner
+policies:
+  - design-philosophy
+  - raw-data-now
+  - report-language-ja
+instruction: ../facets/output-contracts/developer-instruction.md

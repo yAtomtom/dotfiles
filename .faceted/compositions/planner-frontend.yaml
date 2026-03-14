@@ -1,0 +1,10 @@
+name: planner-frontend
+description: "フロントエンドのUI設計・操作フロー設計・宣言的UIの状態設計を行い設計ドキュメントを出力する"
+persona: software-architect
+policies:
+  - design-philosophy
+  - no-production-modify
+  - report-language-ja
+knowledge:
+  - sandbox-convention
+instruction: ../facets/output-contracts/planner-frontend-instruction.md

@@ -1,0 +1,11 @@
+name: commit-maker
+description: "git staging済みの変更に対してConventional Commitsフォーマットのコミットメッセージを作成しgit commitを実行する"
+persona: git-operations
+policies:
+  - staging-integrity
+  - raw-data-now
+  - report-language-ja
+knowledge:
+  - conventional-commits
+  - git-memento
+instruction: ../facets/output-contracts/commit-flow.md

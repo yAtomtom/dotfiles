@@ -1,0 +1,10 @@
+name: planner
+description: "DDDのコンテキスト設計・目的駆動による機能整理・契約による条件定義を行い設計ドキュメントを出力する"
+persona: software-architect
+policies:
+  - design-philosophy
+  - no-production-modify
+  - report-language-ja
+knowledge:
+  - sandbox-convention
+instruction: ../facets/output-contracts/design-doc-output.md

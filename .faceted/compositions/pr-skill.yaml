@@ -1,0 +1,5 @@
+name: pr
+description: "プルリクエストを作成する"
+persona: pr-operations
+policies:
+  - pr-rules

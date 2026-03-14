@@ -1,0 +1,8 @@
+name: reviewer
+description: "品質・セキュリティ・パフォーマンスの観点からレビューレポートを出力する"
+persona: code-reviewer
+policies:
+  - design-philosophy
+  - no-production-modify
+  - report-language-ja
+instruction: ../facets/output-contracts/reviewer-instruction.md

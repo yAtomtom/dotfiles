@@ -1,0 +1,7 @@
+name: recall
+description: "プロジェクト固有の意思決定や知見を参照する"
+persona: knowledge-curator
+knowledge:
+  - memex-storage
+  - source-tagging
+instruction: ../facets/output-contracts/recall-instruction.md

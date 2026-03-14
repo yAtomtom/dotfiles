@@ -1,0 +1,9 @@
+name: tester
+description: "テストコードの作成・テスト実行・Linter/Formatterの実行を行い結果を報告する"
+persona: code-practitioner
+policies:
+  - design-philosophy
+  - raw-data-now
+  - no-production-modify
+  - report-language-ja
+instruction: ../facets/output-contracts/test-execution-flow.md

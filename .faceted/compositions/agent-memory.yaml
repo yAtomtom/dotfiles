@@ -1,0 +1,6 @@
+name: agent-memory
+description: "セッションの作業状態を保存・復元する"
+persona: knowledge-curator
+knowledge:
+  - memex-storage
+instruction: ../facets/output-contracts/agent-memory-instruction.md

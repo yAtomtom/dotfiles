@@ -1,0 +1,7 @@
+name: remember
+description: "プロジェクトの知識・決定事項をトピック別にノートに永続保存する"
+persona: knowledge-curator
+knowledge:
+  - memex-storage
+  - source-tagging
+instruction: ../facets/output-contracts/remember-instruction.md
