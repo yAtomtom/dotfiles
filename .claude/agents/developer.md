@@ -1,6 +1,6 @@
 ---
 name: developer
-description: 設計ドキュメントに基づきKISS原則と関数型プログラミングの思想で実装を行う
+description: "設計ドキュメントに基づきKISS原則と関数型プログラミングの思想で実装を行う"
 tools: Bash, Read, Write, Edit, Grep, Glob
 maxTurns: 20
 ---

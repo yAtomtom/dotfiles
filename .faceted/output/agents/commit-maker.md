@@ -1,6 +1,6 @@
 ---
 name: commit-maker
-description: git staging済みの変更に対してConventional Commitsフォーマットのコミットメッセージを作成しgit commitを実行する
+description: "git staging済みの変更に対してConventional Commitsフォーマットのコミットメッセージを作成しgit commitを実行する"
 tools: Bash, Read, Grep, Glob
 maxTurns: 10
 ---

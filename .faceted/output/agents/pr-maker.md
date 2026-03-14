@@ -1,6 +1,6 @@
 ---
 name: pr-maker
-description: リモートにpush済みのブランチからgh pr createでプルリクエストを作成する
+description: "リモートにpush済みのブランチからgh pr createでプルリクエストを作成する"
 tools: Bash, Read, Grep, Glob
 maxTurns: 8
 ---

@@ -1,6 +1,6 @@
 ---
 name: cross-reviewer
-description: サンドボックスの成果物をCopilotに送信してクロスレビューを実行し結果を報告する
+description: "サンドボックスの成果物をCopilotに送信してクロスレビューを実行し結果を報告する"
 tools: Bash, Read, Grep, Glob
 maxTurns: 10
 ---

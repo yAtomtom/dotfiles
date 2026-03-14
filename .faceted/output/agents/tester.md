@@ -1,6 +1,6 @@
 ---
 name: tester
-description: テストコードの作成・テスト実行・Linter/Formatterの実行を行い結果を報告する
+description: "テストコードの作成・テスト実行・Linter/Formatterの実行を行い結果を報告する"
 tools: Bash, Read, Write, Edit, Grep, Glob
 maxTurns: 15
 ---

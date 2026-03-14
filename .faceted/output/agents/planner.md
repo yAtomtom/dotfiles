@@ -1,6 +1,6 @@
 ---
 name: planner
-description: DDDのコンテキスト設計・目的駆動による機能整理・契約による条件定義を行い設計ドキュメントを出力する
+description: "DDDのコンテキスト設計・目的駆動による機能整理・契約による条件定義を行い設計ドキュメントを出力する"
 tools: Bash, Read, Grep, Glob
 maxTurns: 15
 ---

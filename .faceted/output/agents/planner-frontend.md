@@ -1,6 +1,6 @@
 ---
 name: planner-frontend
-description: フロントエンドのUI設計・操作フロー設計・宣言的UIの状態設計を行い設計ドキュメントを出力する
+description: "フロントエンドのUI設計・操作フロー設計・宣言的UIの状態設計を行い設計ドキュメントを出力する"
 tools: Bash, Read, Grep, Glob
 maxTurns: 15
 ---

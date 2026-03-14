@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: 品質・セキュリティ・パフォーマンスの観点からレビューレポートを出力する
+description: "品質・セキュリティ・パフォーマンスの観点からレビューレポートを出力する"
 tools: Bash, Read, Grep, Glob
 maxTurns: 15
 ---

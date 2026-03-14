@@ -1,6 +1,6 @@
 ---
 name: address
-description: PRのレビューコメントを精査し妥当な指摘に対して修正・コミットまで実施する
+description: "PRのレビューコメントを精査し妥当な指摘に対して修正・コミットまで実施する"
 tools: Bash, Read, Write, Edit, Grep, Glob
 maxTurns: 20
 ---

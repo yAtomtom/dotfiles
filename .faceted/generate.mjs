@@ -89,7 +89,7 @@ function renderDocument(def, compositionDir) {
   const meta = EXTRA_FRONTMATTER[def.name] || { type: 'skill', extra: {} };
   lines.push('---');
   lines.push(`name: ${def.name}`);
-  if (def.description) lines.push(`description: ${def.description}`);
+  if (def.description) lines.push(`description: ${JSON.stringify(def.description)}`);
   for (const [k, v] of Object.entries(meta.extra)) {
     lines.push(`${k}: ${v}`);
   }
