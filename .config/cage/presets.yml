@@ -34,6 +34,7 @@ presets:
       - "$HOME/.cache/uv"
       - "$HOME/.local/share/uv"
       - "$HOME/claude-sandbox"
+      - "$HOME/github.com/yAtomtom/claude-notes"  # ~/.claude/notes の symlink 先
     allow-keychain: true
 
   # Copilot CLI固有

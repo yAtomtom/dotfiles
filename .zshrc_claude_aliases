@@ -7,17 +7,13 @@ claude() {
   command cage -config "$HOME/.config/cage/presets.yml" claude "$@"
 }
 
-_copy_ignored_files() {
+_copy_gitignored_files() {
   local src="$1" dst="$2"
 
-  # 引き継ぐ対象を明示的に列挙
+  # git worktree が伝播しない gitignored ファイルを引き継ぐ
   local targets=(
-    ".claude"
-    "CLAUDE.md"
     ".mcp.json"
-    ".serena"
-    ".github"
-    ".vscode"
+    "CLAUDE.md"
     ".ruby-version"
     ".bundle/config"
     ".gitignore"
@@ -71,7 +67,7 @@ claudewt() {
            echo "💡 For a new branch with specific base: git checkout -b $branch <base>";
            return 1; }
 
-    _copy_ignored_files "$toplevel" "$dir"
+    _copy_gitignored_files "$toplevel" "$dir"
   fi
 
   # 3. Claude Code の実行（zsh はサブシェルに関数を自動引き継ぎ）
