@@ -35,13 +35,68 @@ mcp-doctor /path/to/.mcp.json  # 指定ファイル
 
 ### プレースホルダー
 
-`{{HOME}}`, `{{ORG_REPO}}`, `{{GCP_PROJECT}}`, `{{GCP_KEY_FILE}}`, `{{ORG_CA_CERT}}` — 新規追加時は `install.sh`, `export.sh`, `.env.example` の3箇所を更新する。
+`{{HOME}}`, `{{ORG_REPO}}`, `{{GCP_PROJECT}}`, `{{GCP_KEY_FILE}}`, `{{ORG_CA_CERT}}`, `{{SLACK_MCP_NAME}}`, `{{SLACK_TEST_CHANNEL}}` — 新規追加時は `install.sh`, `export.sh`, `.env.example` の3箇所を更新する。
 
 ### ファイル管理ルール
 
 - 機密情報（API key, token）を含むファイルは管理対象外（`.gitignore` に追加）
 - `install.sh` は既存ファイルを `.dotfiles-backup/<timestamp>/` にバックアップしてから上書きする
 - コミット前に `git diff --cached` でプレースホルダー以外の実パスや機密情報が含まれていないことを確認する
+
+### セキュリティ上の注意
+
+以下のファイルは機密情報を含むため、管理対象に含めない:
+
+- `~/.zshrc` — 環境変数に secret / API key を含む
+- `~/.claude/config.json` — API key 承認ハッシュを含む
+- `.env` — 組織固有の値（GCP プロジェクト ID 等）を含む
+
+### 保守運用
+
+#### symlink 対象ファイルを編集した場合
+
+symlink 経由でリポジトリに直接反映されるため、コミットのみ行う。
+
+#### template 対象ファイルを編集した場合
+
+`$HOME` 配下の実ファイルを編集した後、`export.sh` でリポジトリに反映する。
+
+```bash
+./export.sh      # $HOME のパスを {{HOME}} 等に置換してリポジトリにコピー
+git add -p
+git commit
+```
+
+#### 管理対象ファイルを追加する場合
+
+1. ファイルの性質を判定する
+   - マシン固有パス（`$HOME` の絶対パス等）を含む → **template**
+   - 含まない → **symlink**
+   - 機密情報（API key, token）を含む → **管理対象外**（`.gitignore` に追加）
+2. `install.sh` の `SYMLINK_FILES` または `TEMPLATE_FILES` 配列にパスを追加する
+3. template の場合は `export.sh` の `TEMPLATE_FILES` にも同じパスを追加する
+4. リポジトリにファイルをコピーする
+   - symlink: `cp ~/.new/file .new/file`
+   - template: `./export.sh` を実行（全 template ファイルをまとめてエクスポート）
+5. `./install.sh` を実行して symlink / template 展開を確認する
+
+#### 管理対象ファイルを削除する場合
+
+1. `install.sh`（と template なら `export.sh`）の配列からパスを削除する
+2. リポジトリからファイルを削除する: `git rm .path/to/file`
+3. `$HOME` 配下の symlink またはファイルを手動で削除する
+
+#### zeno snippet を編集した場合
+
+`.config/zeno/config.yml` は symlink のためファイル変更は即反映されるが、zeno はソケットサーバー経由で設定を読み込むためサーバーの再起動が必要。
+
+```bash
+zeno-stop-server && zeno-start-server
+```
+
+#### 自動生成ディレクトリが増えた場合
+
+各ツールのバージョンアップで新しい自動生成ディレクトリが追加されることがある。`git status` に意図しないファイルが表示された場合は `.gitignore` に追加する。
 
 ### 管理対象ツール
 
