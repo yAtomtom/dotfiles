@@ -211,5 +211,8 @@
     "document-skills@anthropic-agent-skills": true
   },
   "effortLevel": "high",
-  "cleanupPeriodDays": 9999
+  "cleanupPeriodDays": 9999,
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "35"
+  }
 }
