@@ -110,3 +110,5 @@ claudewt() {
   return $exit_code
 }
 
+# Claude Code
+export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=35

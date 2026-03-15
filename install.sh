@@ -64,7 +64,7 @@ SYMLINK_FILES=(
   ".claude/commands/test.md"
   ".copilot/copilot-instructions.md"
   ".zshrc_copilot_aliases"
-  ".zshrc_claude_aliases"
+  ".zshrc_claude"
   ".zshrc_git_aliases"
   ".zshrc_zeno"
   ".zshrc_ai"
