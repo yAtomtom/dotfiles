@@ -6,4 +6,5 @@ policies:
   - report-language-ja
 knowledge:
   - sandbox-convention
+  - react-quality-standards
 instruction: ../facets/output-contracts/address-instruction.md

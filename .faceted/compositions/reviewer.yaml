@@ -5,4 +5,6 @@ policies:
   - design-philosophy
   - no-production-modify
   - report-language-ja
+knowledge:
+  - react-quality-standards
 instruction: ../facets/output-contracts/reviewer-instruction.md
