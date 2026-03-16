@@ -15,6 +15,7 @@ presets:
       - "$HOME/.bundle"
       - "$HOME/.gem"
       - "$HOME/.rbenv"
+      - "$HOME/.cache/rubocop_cache"
 
   # プロジェクトディレクトリ + git操作
   project:
