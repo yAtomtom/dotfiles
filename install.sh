@@ -31,6 +31,7 @@ SYMLINK_FILES=(
   ".claude/rules/notion-mcp.instructions.md"
   ".claude/rules/figma-mcp-notes.md"
   ".claude/rules/plan-frontmatter.md"
+  ".claude/rules/plan-mode-guard.md"
   ".claude/hooks/pretooluse-guard.sh"
   ".claude/hooks/git-memento-rewrite.sh"
   ".claude/hooks/rtk-rewrite.sh"
