@@ -42,3 +42,6 @@
 .serena/language_servers/
 .serena/logs/
 .serena/prompt_templates/
+
+# skill-auditor reports
+.claude/skill-report/

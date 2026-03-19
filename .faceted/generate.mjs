@@ -51,6 +51,7 @@ const EXTRA_FRONTMATTER = {
   'recall':       { type: 'skill', extra: { 'user-invocable': false } },
   'remember':     { type: 'skill', extra: { 'argument-hint': '"[保存したいメモや情報]"' } },
   'pr':           { type: 'skill', extra: { 'disable-model-invocation': true, 'allowed-tools': 'Bash(gh *), Bash(git *)' } },
+  'skill-auditor': { type: 'skill', extra: { 'disable-model-invocation': true } },
   // Agents
   'developer':         { type: 'agent', extra: { tools: 'Bash, Read, Write, Edit, Grep, Glob', maxTurns: 20 } },
   'tester':            { type: 'agent', extra: { tools: 'Bash, Read, Write, Edit, Grep, Glob', maxTurns: 15 } },

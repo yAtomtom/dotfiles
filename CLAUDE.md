@@ -145,8 +145,10 @@ CLI がこれらをサポートした場合は移行を検討する。
 | 種別 | 生成対象（`.faceted/` で管理） | 非対象（手動管理） |
 |------|-------------------------------|-------------------|
 | agents | address, commit-maker, cross-reviewer, developer, planner, planner-frontend, pr-maker, reviewer, tester | なし |
-| skills | agent-memory, pr, recall, remember | anti-human-bottleneck, state-first-design, skill-review, prompt-review |
+| skills | agent-memory, pr, recall, remember, skill-auditor | anti-human-bottleneck, state-first-design, skill-review, prompt-review |
 | commands | なし | すべて（薄いディスパッチャーとして手動管理） |
+
+※ skill-auditor は SKILL.md のみ faceted 生成。サブディレクトリ（agents/, scripts/, assets/, references/, schemas/）は手動管理。
 
 #### 変更フロー
 

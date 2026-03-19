@@ -1,0 +1,7 @@
+name: skill-auditor
+description: "Claude Codeセッション履歴を分析しスキルポートフォリオの健全性を評価する。ルーティング精度・注意予算・競合分析のHTMLレポートを生成する。「スキル監査」「skill audit」「スキルルーティング分析」や /skill-auditor で使用する。"
+persona: skill-portfolio-auditor
+knowledge:
+  - skill-audit-error-taxonomy
+  - skill-audit-reference
+instruction: ../facets/output-contracts/skill-auditor-workflow.md
