@@ -1,6 +1,6 @@
 ---
 name: recall
-description: "プロジェクト固有の質問を受けたとき、このスキルで過去の決定事項を先に検索する。「〜はどうなった？」「なぜ〜を使っている？」「このプロジェクトでは〜」のような質問に対して、推測ではなく記録に基づいて回答する。一般的な技術知識には不要。「保存して」「メモして」は→ remember。セッション作業状態の復元は→ agent-memory。"
+description: "プロジェクト固有の質問を受けたとき、このスキルで過去の決定事項を先に検索する。「〜はどうなった？」「〜だっけ？」「〜でしたっけ？」「なぜ〜を使っている？」「このプロジェクトでは〜」のような質問に対して、推測ではなく記録に基づいて回答する。一般的な技術知識には不要。「保存して」「メモして」「記録して」は→ remember。セッション作業状態の復元は→ agent-memory。"
 user-invocable: false
 ---
 
@@ -55,6 +55,26 @@ rg "検索語" ~/.local/share/claude/memories/
 - 日本語OK、スペースは `-` に置換
 - 良い例: `causal-impact.md`, `api-設計.md`
 - 悪い例: `2026-01-27.md`, `memo-1.md`
+
+## remember のファイル形式
+
+```markdown
+---
+source: "[タグ]"
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+
+## [タグ] 簡潔な見出し
+
+[内容]
+
+---
+```
+
+- 新規作成時: `created` と `updated` に作成日を設定
+- 既存ノートへの追記時: `updated` のみ更新。frontmatter が存在しない場合は追加してから追記
+- `source` は情報源タグ（`[Claude]`, `[Slack]`, `[Slack+Notion]` 等）を設定
 
 ### source-tagging
 

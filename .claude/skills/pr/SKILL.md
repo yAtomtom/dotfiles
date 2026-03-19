@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "コミット履歴を分析しプルリクエストを作成する。/pr や「PRを作って」で使用する。commit, push, branch操作は行わない。"
+description: "コミット履歴を分析しプルリクエストを作成する。/pr や「PRを作って」で使用する。commit, push, branch操作は行わない。SKILL.mdの編集・レビュー作業には使用しない。"
 disable-model-invocation: true
 allowed-tools: Bash(gh *), Bash(git *)
 ---
