@@ -181,11 +181,7 @@ ctx_win = data.get('context_window', {})
 win_size = ctx_win.get('context_window_size')
 used_pct = ctx_win.get('used_percentage') or 0
 
-if win_size:
-    current = int(win_size * used_pct / 100)
-    parts.append(f'{DIM}ctx{R} {fmt_tokens(current)}/{fmt_tokens(win_size)} {fmt_bar("", used_pct)}')
-elif used_pct:
-    parts.append(fmt_bar('ctx', used_pct))
+parts.append(fmt_bar('ctx', used_pct))
 
 # 4. rate limits
 rl = data.get('rate_limits', {})
