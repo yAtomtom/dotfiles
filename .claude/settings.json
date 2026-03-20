@@ -204,7 +204,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "python3 {{HOME}}/.claude/statusline.py"
+    "command": "python3 $HOME/.claude/statusline.py"
   },
   "enabledPlugins": {
     "example-skills@anthropic-agent-skills": true,
