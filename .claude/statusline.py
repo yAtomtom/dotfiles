@@ -74,6 +74,8 @@ def braille_bar(pct, width=8):
 
 
 def fmt_bar(label, pct):
+    if pct is None:
+        return f'{DIM}{label}{R} --'
     return f'{DIM}{label}{R} {gradient(pct)}{braille_bar(pct)}{R} {round(pct)}%'
 
 
@@ -179,14 +181,14 @@ parts.append(data.get('model', {}).get('display_name', 'Claude'))
 # 3. context window occupancy
 ctx_win = data.get('context_window', {})
 win_size = ctx_win.get('context_window_size')
-used_pct = ctx_win.get('used_percentage') or 0
+used_pct = ctx_win.get('used_percentage')
 
 parts.append(fmt_bar('ctx', used_pct))
 
 # 4. rate limits
 rl = data.get('rate_limits', {})
-parts.append(fmt_bar('5h', rl.get('five_hour', {}).get('used_percentage') or 0))
-parts.append(fmt_bar('7d', rl.get('seven_day', {}).get('used_percentage') or 0))
+parts.append(fmt_bar('5h', rl.get('five_hour', {}).get('used_percentage')))
+parts.append(fmt_bar('7d', rl.get('seven_day', {}).get('used_percentage')))
 
 # 5. session duration (from stdin cost — no I/O)
 cost = data.get('cost', {})
