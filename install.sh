@@ -26,6 +26,7 @@ done
 SYMLINK_FILES=(
   ".claude/CLAUDE.md"
   ".claude/claude-powerline.json"
+  ".claude/statusline.py"
   ".claude/instructions/security.md"
   ".claude/rules/context7-mcp.instructions.md"
   ".claude/rules/notion-mcp.instructions.md"

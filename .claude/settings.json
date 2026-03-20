@@ -204,7 +204,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "COLUMNS=$(stty size 2>/dev/null </dev/tty | awk '{print $2}') claude-powerline"
+    "command": "python3 {{HOME}}/.claude/statusline.py"
   },
   "enabledPlugins": {
     "example-skills@anthropic-agent-skills": true,
