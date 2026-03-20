@@ -106,16 +106,20 @@ def parse_git_status(output):
     if not lines or not lines[0].startswith('## '):
         return None
     header = lines[0][3:]
+    # detached HEAD: "HEAD (no branch)" or "HEAD (no branch)...something"
+    detached = header.startswith('HEAD (no branch)') or header == 'HEAD'
     branch_part = header.split('...')[0]
     ahead, behind = 0, 0
-    m = re.search(r'\[ahead (\d+)', header)
-    if m:
-        ahead = int(m.group(1))
-    m = re.search(r'behind (\d+)', header)
-    if m:
-        behind = int(m.group(1))
+    if not detached:
+        m = re.search(r'\[ahead (\d+)', header)
+        if m:
+            ahead = int(m.group(1))
+        m = re.search(r'behind (\d+)', header)
+        if m:
+            behind = int(m.group(1))
     dirty = len(lines) > 1
-    return {'branch': branch_part, 'dirty': dirty, 'ahead': ahead, 'behind': behind}
+    return {'branch': branch_part, 'dirty': dirty, 'ahead': ahead, 'behind': behind,
+            'detached': detached}
 
 
 # --- Side-effect functions ---
@@ -123,12 +127,21 @@ def parse_git_status(output):
 def get_git_info(cwd):
     try:
         r = subprocess.run(
-            ['git', 'status', '--porcelain', '-b'],
+            ['git', 'status', '--porcelain', '-b', '--untracked-files=no'],
             capture_output=True, text=True, timeout=1, cwd=cwd
         )
         if r.returncode != 0:
             return None
-        return parse_git_status(r.stdout)
+        info = parse_git_status(r.stdout)
+        if info and info['detached']:
+            # Show short SHA instead of "HEAD (no branch)"
+            sha = subprocess.run(
+                ['git', 'rev-parse', '--short', 'HEAD'],
+                capture_output=True, text=True, timeout=1, cwd=cwd
+            )
+            if sha.returncode == 0:
+                info['branch'] = sha.stdout.strip()
+        return info
     except Exception:
         return None
 
@@ -170,21 +183,17 @@ total_out = ctx_win.get('total_output_tokens')
 win_size = ctx_win.get('context_window_size')
 used_pct = ctx_win.get('used_percentage')
 
-if total_in is not None and total_out is not None and win_size and used_pct is not None:
-    tok = fmt_tokens(total_in + total_out)
+if win_size:
+    tok = fmt_tokens((total_in or 0) + (total_out or 0))
     cap = fmt_tokens(win_size)
-    parts.append(f'{DIM}tok{R} {tok}/{cap} {fmt_bar("ctx", used_pct)}')
+    parts.append(f'{DIM}tok{R} {tok}/{cap} {fmt_bar("ctx", used_pct or 0)}')
 elif used_pct is not None:
     parts.append(fmt_bar('ctx', used_pct))
 
 # 4. rate limits
-five = data.get('rate_limits', {}).get('five_hour', {}).get('used_percentage')
-if five is not None:
-    parts.append(fmt_bar('5h', five))
-
-week = data.get('rate_limits', {}).get('seven_day', {}).get('used_percentage')
-if week is not None:
-    parts.append(fmt_bar('7d', week))
+rl = data.get('rate_limits', {})
+parts.append(fmt_bar('5h', rl.get('five_hour', {}).get('used_percentage') or 0))
+parts.append(fmt_bar('7d', rl.get('seven_day', {}).get('used_percentage') or 0))
 
 # 5. session duration (from stdin cost — no I/O)
 cost = data.get('cost', {})
@@ -197,9 +206,9 @@ added = cost.get('total_lines_added')
 removed = cost.get('total_lines_removed')
 if added is not None or removed is not None:
     diff_parts = []
-    if added:
+    if added and added > 0:
         diff_parts.append(f'{GREEN}+{added}{R}')
-    if removed:
+    if removed and removed > 0:
         diff_parts.append(f'{RED}-{removed}{R}')
     if diff_parts:
         parts.append(' '.join(diff_parts))
