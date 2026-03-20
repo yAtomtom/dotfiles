@@ -176,18 +176,15 @@ if git and project_dir:
 # 2. model
 parts.append(data.get('model', {}).get('display_name', 'Claude'))
 
-# 3. tokens / context
+# 3. context window occupancy
 ctx_win = data.get('context_window', {})
-total_in = ctx_win.get('total_input_tokens')
-total_out = ctx_win.get('total_output_tokens')
 win_size = ctx_win.get('context_window_size')
-used_pct = ctx_win.get('used_percentage')
+used_pct = ctx_win.get('used_percentage') or 0
 
 if win_size:
-    tok = fmt_tokens((total_in or 0) + (total_out or 0))
-    cap = fmt_tokens(win_size)
-    parts.append(f'{DIM}tok{R} {tok}/{cap} {fmt_bar("ctx", used_pct or 0)}')
-elif used_pct is not None:
+    current = int(win_size * used_pct / 100)
+    parts.append(f'{DIM}ctx{R} {fmt_tokens(current)}/{fmt_tokens(win_size)} {fmt_bar("", used_pct)}')
+elif used_pct:
     parts.append(fmt_bar('ctx', used_pct))
 
 # 4. rate limits
