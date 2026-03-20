@@ -95,6 +95,13 @@ if [[ "$tool_name" == "Bash" ]]; then
   [[ "$cmd" =~ docker\ (rm|rmi|system\ prune) ]] && deny "docker destructive operation is blocked by security hook"
   [[ "$cmd" =~ kubectl\ delete ]]                 && deny "kubectl delete is blocked by security hook"
   [[ "$cmd" =~ helm\ uninstall ]]                 && deny "helm uninstall is blocked by security hook"
+
+  # --- 機密ファイルへのアクセス ---
+  # git commit のメッセージ内にパス文字列が含まれる場合の false positive を除外
+  if ! [[ "$cmd" =~ ^git\ (commit|memento\ commit) ]]; then
+    SENSITIVE_PATHS='(\.ssh/|\.aws/|\.gnupg/|\.config/gcloud/|\.kube/|\.docker/|\.netrc$|\.npmrc$|\.pypirc$|config/master\.key|config/credentials|\.env(\.|$))'
+    [[ "$cmd" =~ $SENSITIVE_PATHS ]] && deny "Access to sensitive path is blocked by security hook"
+  fi
 fi
 
 # =============================================================================
