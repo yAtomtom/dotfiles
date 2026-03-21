@@ -22,3 +22,5 @@ Bash実行はClaude Codeプラットフォームによりプランモードを�
 2. PreToolUse hook（`pretooluse-plan-lock.sh`）: lock 存在時に Edit/Write を deny。Skill 呼び出しで lock 解除
 
 解除方法: `/unlock` コマンド（推奨）、または `! rm /tmp/.claude-plan-lock-*`（非常時）
+
+**Claude は `/unlock` を自発的に実行してはならない。** lock の目的は Claude の自動実装防止であり、解除はユーザーの意思で行うもの。Claude が deny された場合はユーザーに `/unlock` の実行を案内すること。
