@@ -52,7 +52,7 @@ $ARGUMENTS を解析:
 
 ## STEP 2: TDD 要件定義
 Agent ツールで tsumiki-req-writer を呼び出す。
-prompt（プランファイル指定時）: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-req-writer として動作してください。変更依頼: {PLAN_CONTENT}」
+prompt（プランファイル指定時）: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id}, INPUT_TYPE=plan で tsumiki-req-writer として動作してください。変更依頼: {PLAN_CONTENT}」
 prompt（テキスト指定時）: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-req-writer として動作してください。変更依頼: {$ARGUMENTS}」
 完了確認: `docs/tdd/<task-id>/requirements.md` が生成されていること
 
