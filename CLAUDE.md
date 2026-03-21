@@ -193,6 +193,10 @@ tsumiki コマンドファイル（Tier 2: プロジェクト固有）を動的�
 #### 前提条件
 
 対象プロジェクトに tsumiki コマンドファイルが配置されていること。確認は `/tsumiki-init` で行う。
+コマンドファイルは以下の優先順で検出される:
+1. `.claude/commands/tsumiki/` — プロジェクトローカル配置
+2. `.claude/commands/` 直下 — npx 方式
+3. `~/.claude/plugins/cache/tsumiki/*/*/commands/` — グローバルプラグイン
 
 ```
 /tsumiki-init
@@ -224,7 +228,7 @@ tsumiki コマンドファイル（Tier 2: プロジェクト固有）を動的�
 | 0.5 | - | 入力解析・タスク ID 決定 | task-id 確定 |
 | 1 | tsumiki-analyzer | 既存コード分析（初回のみ） | `docs/rev/tasks.md` + `docs/rev/design.md` 存在 |
 | 2 | tsumiki-req-writer | TDD 要件定義 | `docs/tdd/<task-id>/requirements.md` 生成 |
-| 3 | tsumiki-test-writer | テストケース生成（Red） | テストファイル生成、全 FAIL |
+| 3 | tsumiki-test-writer | テストケース生成（Red） | テストファイル生成、少なくとも1つ FAIL |
 | 4 | tsumiki-implementer | TDD 実装（Green→Refactor） | 全テスト PASS |
 | 5 | tsumiki-verifier | 完了検証（読み取り専用） | 判定「完了」 |
 
@@ -238,7 +242,7 @@ tsumiki コマンドファイルの更新やエージェントの変更後、以
 
 1. **プラン入力の検証**: `/tdd-flow <plan-file>` で STEP 3（tsumiki-test-writer）まで進み、テストファイルが生成されること
    - STEP 2 完了ゲート: `docs/tdd/<task-id>/requirements.md` が tsumiki テンプレートの5セクション見出しを含む
-   - STEP 3 完了ゲート: tsumiki-test-writer がテストファイルを生成し、テスト実行で全 FAIL
+   - STEP 3 完了ゲート: tsumiki-test-writer がテストファイルを生成し、テスト実行で少なくとも1つが FAIL
 2. **テキスト入力の検証**: `/tdd-flow <テキスト>` で STEP 2 完了ゲート（`docs/tdd/<task-id>/requirements.md` 生成）を通過すること
    - 出力先が `docs/tdd/<task-id>/requirements.md` であること（tsumiki の `docs/implements/` ではない）
 3. **並列実行の検証**: 異なる plan ファイル（例: `plan-a.md`, `plan-b.md`）で2回実行し、`docs/tdd/plan-a/` と `docs/tdd/plan-b/` が共存すること

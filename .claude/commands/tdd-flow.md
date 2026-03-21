@@ -10,7 +10,7 @@ description: "既存プロジェクトへの機能追加・変更を TDD ワー�
 
 ## 停止条件
 いずれかのステップの完了ゲートを満たせない場合、即座に停止しユーザーに報告する。
-後続ステップは実行しない。ステップ間のリトライは行わず、失敗原因と推奨対応を提示する。
+後続ステップは実行しない。ステップ間のリトライは行わず、失敗原因と推奨対応を提示する。オーケストレーターがサブエージェントを代行して手動実行してはならない。
 ただし、ステップ内部での自己修正（例: tsumiki-implementer の Green フェーズでの最大3回リトライ）はサブエージェントの責務であり許可する。
 
 ## STEP 0: tsumiki コマンドパス確認（Glob で検出）
@@ -18,7 +18,9 @@ description: "既存プロジェクトへの機能追加・変更を TDD ワー�
 2. 存在すれば TSUMIKI_PREFIX=`.claude/commands/tsumiki`
 3. 存在しなければ `.claude/commands/tdd-requirements.md` が存在するか確認
 4. 存在すれば TSUMIKI_PREFIX=`.claude/commands`
-5. いずれも存在しなければ停止:
+5. 存在しなければ Glob で `~/.claude/plugins/cache/tsumiki/*/*/commands/tdd-requirements.md` を検出
+6. 見つかれば TSUMIKI_PREFIX=検出されたファイルの親ディレクトリ（`commands/` を含むパス）。複数候補がある場合はパスを辞書順ソートし最後のもの（最新バージョン）を使用する
+7. いずれも存在しなければ停止:
    「tsumiki コマンドファイルが見つかりません。
     /tsumiki-init を実行するか、プロジェクト dotfiles からコマンドファイルを配置してください。」
 
@@ -44,9 +46,10 @@ $ARGUMENTS を解析:
 以降のステップでは決定した task-id を使用する。各サブエージェントの prompt では `TASK_ID={task-id}` として渡す（task-id と TASK_ID は同一の値）。
 
 ## STEP 1: 既存コード分析（初回のみ）
-完了ゲート（スキップ判定）: `docs/rev/tasks.md` と `docs/rev/design.md` の両方が存在するか？
-- 両方存在 → スキップ
-- いずれか不在 → Agent ツールで tsumiki-analyzer を呼び出す
+完了ゲート（スキップ判定）:
+- `docs/rev/tasks.md` と `docs/rev/design.md` の両方が存在 → スキップ
+- INPUT_TYPE=plan → スキップ（プランが既存コード分析を代替する）
+- 上記以外 → Agent ツールで tsumiki-analyzer を呼び出す
   prompt: 「TSUMIKI_PREFIX={検出パス} で tsumiki-analyzer として動作してください。」
   完了確認: `docs/rev/tasks.md` と `docs/rev/design.md` が生成されていること
 
@@ -59,7 +62,7 @@ prompt（テキスト指定時）: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={ta
 ## STEP 3: テストケース生成
 Agent ツールで tsumiki-test-writer を呼び出す。
 prompt: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-test-writer として動作してください。」
-完了確認: サブエージェントの完了報告を確認し、テストファイルが生成されテスト実行で FAIL であることを確認
+完了確認: サブエージェントの完了報告を確認し、テストファイルが生成され、新規生成テストファイルのテスト実行で少なくとも1つのテストが FAIL であること（= 新機能が未実装であることの証拠）を確認
 
 ## STEP 4: TDD 実装
 Agent ツールで tsumiki-implementer を呼び出す。
