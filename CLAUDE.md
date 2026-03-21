@@ -144,7 +144,7 @@ CLI がこれらをサポートした場合は移行を検討する。
 
 | 種別 | 生成対象（`.faceted/` で管理） | 非対象（手動管理） |
 |------|-------------------------------|-------------------|
-| agents | address, commit-maker, cross-reviewer, developer, planner, planner-frontend, pr-maker, reviewer, tester | なし |
+| agents | address, commit-maker, cross-reviewer, developer, planner, planner-frontend, pr-maker, reviewer, tester | tsumiki-analyzer, tsumiki-req-writer, tsumiki-test-writer, tsumiki-implementer, tsumiki-verifier |
 | skills | agent-memory, pr, recall, remember, skill-auditor | anti-human-bottleneck, state-first-design, skill-review, prompt-review |
 | commands | なし | すべて（薄いディスパッチャーとして手動管理） |
 
@@ -178,6 +178,7 @@ command cp .faceted/output/agents/developer.md .claude/agents/developer.md
 | 新規スキルの追加（手動管理） | `.claude/skills/<name>/SKILL.md` を直接作成 |
 | 新規コマンドの追加 | `.claude/commands/<name>.md` を直接作成（`agent: <name>` でエージェントに委譲） |
 | 複数ファイルに共通の変更を反映 | 該当するファセットを1箇所編集 → 生成 → 関連する全ファイルに伝播 |
+| tsumiki エージェントの変更 | `.claude/agents/tsumiki-*.md` を直接編集（faceted 非対象、手動管理） |
 
 #### 注意事項
 
