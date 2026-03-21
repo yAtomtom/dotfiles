@@ -37,6 +37,7 @@ SYMLINK_FILES=(
   ".claude/hooks/git-memento-rewrite.sh"
   ".claude/hooks/rtk-rewrite.sh"
   ".claude/hooks/posttooluse-commit-verify.sh"
+  ".claude/hooks/posttooluse-exitplan-guard.sh"
   ".claude/skills/agent-memory/SKILL.md"
   ".claude/skills/anti-human-bottleneck/SKILL.md"
   ".claude/skills/pr/SKILL.md"

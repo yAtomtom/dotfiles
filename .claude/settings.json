@@ -227,6 +227,15 @@
             "command": "{{HOME}}/.claude/hooks/posttooluse-commit-verify.sh"
           }
         ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{HOME}}/.claude/hooks/posttooluse-exitplan-guard.sh"
+          }
+        ]
       }
     ]
   },
