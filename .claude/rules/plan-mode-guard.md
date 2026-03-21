@@ -20,3 +20,5 @@ Bash実行はClaude Codeプラットフォームによりプランモードを�
 この制御は2層の Hook で管理:
 1. PostToolUse hook（`posttooluse-exitplan-guard.sh`）: ExitPlanMode 後に lock ファイル作成 + systemMessage 注入
 2. PreToolUse hook（`pretooluse-plan-lock.sh`）: lock 存在時に Edit/Write を deny。Skill 呼び出しで lock 解除
+
+解除方法: `/unlock` コマンド（推奨）、または `! rm /tmp/.claude-plan-lock-*`（非常時）

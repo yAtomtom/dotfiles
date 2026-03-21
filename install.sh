@@ -71,6 +71,7 @@ SYMLINK_FILES=(
   ".claude/commands/init-repo.md"
   ".claude/commands/tdd-flow.md"
   ".claude/commands/tsumiki-init.md"
+  ".claude/commands/unlock.md"
   ".claude/agents/commit-maker.md"
   ".claude/agents/pr-maker.md"
   ".claude/agents/reviewer.md"

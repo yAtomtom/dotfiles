@@ -29,7 +29,7 @@ fi
 
 # Edit/Write → deny
 if [[ "$TOOL_NAME" == "Edit" || "$TOOL_NAME" == "Write" ]]; then
-  jq -n --arg reason "プラン承認後ロック中。実装を開始するにはスキル（/tdd-flow, /develop 等）を実行するか、ユーザーに端末で直接 ! rm $LOCK_FILE を実行してもらってください（! プレフィックスはユーザーの直接実行のため pretooluse-guard.sh のブロック対象外）。" \
+  jq -n --arg reason "プラン承認後ロック中。/unlock を実行して解除するか、非常時はユーザーに端末で直接 ! rm $LOCK_FILE を実行してもらってください。" \
     '{
       "hookSpecificOutput": {
         "hookEventName": "PreToolUse",
