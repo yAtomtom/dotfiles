@@ -22,9 +22,9 @@ description: "既存プロジェクトへの機能追加・変更を TDD ワー�
     /tsumiki-init を実行するか、プロジェクト dotfiles からコマンドファイルを配置してください。」
 
 ## STEP 1: 既存コード分析（初回のみ）
-完了ゲート（スキップ判定）: `docs/rev/tasks.md` が存在するか？
-- 存在 → スキップ
-- 不在 → Agent ツールで tsumiki-analyzer を呼び出す
+完了ゲート（スキップ判定）: `docs/rev/tasks.md` と `docs/rev/design.md` の両方が存在するか？
+- 両方存在 → スキップ
+- いずれか不在 → Agent ツールで tsumiki-analyzer を呼び出す
   prompt: 「TSUMIKI_PREFIX={検出パス} で tsumiki-analyzer として動作してください。」
   完了確認: `docs/rev/tasks.md` と `docs/rev/design.md` が生成されていること
 
@@ -36,12 +36,12 @@ prompt: 「TSUMIKI_PREFIX={検出パス}, 変更依頼: {$ARGUMENTS} で tsumiki
 ## STEP 3: テストケース生成
 Agent ツールで tsumiki-test-writer を呼び出す。
 prompt: 「TSUMIKI_PREFIX={検出パス} で tsumiki-test-writer として動作してください。」
-完了確認: テストファイルが生成され、tsumiki コマンドの指示に従ったテスト実行で FAIL 確認
+完了確認: サブエージェントの完了報告を確認し、テストファイルが生成されテスト実行で FAIL であることを確認
 
 ## STEP 4: TDD 実装
 Agent ツールで tsumiki-implementer を呼び出す。
 prompt: 「TSUMIKI_PREFIX={検出パス} で tsumiki-implementer として動作してください。」
-完了確認: tsumiki コマンドの指示に従ったテスト実行で PASS 確認
+完了確認: サブエージェントの完了報告を確認し、テスト実行で PASS であることを確認
 
 ## STEP 5: 完了検証
 Agent ツールで tsumiki-verifier を呼び出す。
