@@ -9,7 +9,9 @@ maxTurns: 8
 
 ## 事前準備: tsumiki コマンドファイルの読み込み
 
-prompt で受け取った TSUMIKI_PREFIX を使い、以下のファイルを Read で読み込む:
+prompt で受け取った TSUMIKI_PREFIX と TASK_ID を使う。
+
+以下のファイルを Read で読み込む:
 
 `{TSUMIKI_PREFIX}/tdd-verify-complete.md`
 
@@ -21,7 +23,7 @@ Read に失敗した場合はエラーをそのまま報告して停止する。
 
 **検証観点:**
 - テストの通過確認（Bash でテスト実行）
-- docs/tdd/requirements.md の全要件が充足されているか
+- docs/tdd/{TASK_ID}/requirements.md の全要件が充足されているか
 - テストの削除・コメントアウトがないか
 
 ## 完了レポートの出力

@@ -9,7 +9,9 @@ maxTurns: 20
 
 ## 事前準備: tsumiki コマンドファイルの読み込み
 
-prompt で受け取った TSUMIKI_PREFIX を使い、以下の3ファイルを Read で読み込む:
+prompt で受け取った TSUMIKI_PREFIX と TASK_ID を使う。
+
+以下の3ファイルを Read で読み込む:
 
 1. `{TSUMIKI_PREFIX}/tdd-red.md`
 2. `{TSUMIKI_PREFIX}/tdd-green.md`

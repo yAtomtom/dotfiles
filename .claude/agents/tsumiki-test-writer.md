@@ -1,6 +1,6 @@
 ---
 name: tsumiki-test-writer
-description: "docs/tdd/requirements.md を読み込み TDD テストケースを生成する。tsumiki の tdd-testcases コマンドを動的ロードして実行する"
+description: "docs/tdd/{TASK_ID}/requirements.md を読み込み TDD テストケースを生成する。tsumiki の tdd-testcases コマンドを動的ロードして実行する"
 tools: Read, Write, Bash, Glob, Grep
 maxTurns: 15
 ---
@@ -9,7 +9,9 @@ maxTurns: 15
 
 ## 事前準備: tsumiki コマンドファイルの読み込み
 
-prompt で受け取った TSUMIKI_PREFIX を使い、以下のファイルを Read で読み込む:
+prompt で受け取った TSUMIKI_PREFIX と TASK_ID を使う。
+
+以下のファイルを Read で読み込む:
 
 `{TSUMIKI_PREFIX}/tdd-testcases.md`
 
@@ -17,7 +19,7 @@ Read に失敗した場合はエラーをそのまま報告して停止する。
 
 ## 実行
 
-読み込んだ tdd-testcases.md の指示に従い、`docs/tdd/requirements.md` の全要件を網羅したテストファイルを生成する。
+読み込んだ tdd-testcases.md の指示に従い、`docs/tdd/{TASK_ID}/requirements.md` の全要件を網羅したテストファイルを生成する。
 
 **制約（絶対に守ること）:**
 - 実装コードは一切書かない

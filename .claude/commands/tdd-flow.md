@@ -1,5 +1,5 @@
 ---
-description: "既存プロジェクトへの機能追加・変更を TDD ワークフローで実行する。例: /tdd-flow ユーザー一覧にページネーションを追加したい"
+description: "既存プロジェクトへの機能追加・変更を TDD ワークフローで実行する。例: /tdd-flow ~/.claude/plans/plan-name.md または /tdd-flow ページネーション追加"
 ---
 
 以下の変更依頼に対して TDD ワークフローを順序保持で実行してください。
@@ -22,6 +22,27 @@ description: "既存プロジェクトへの機能追加・変更を TDD ワー�
    「tsumiki コマンドファイルが見つかりません。
     /tsumiki-init を実行するか、プロジェクト dotfiles からコマンドファイルを配置してください。」
 
+## STEP 0.5: 入力解析とタスク ID 決定
+
+$ARGUMENTS を解析:
+
+1. $ARGUMENTS が `.md` で終わる場合（プランファイル指定）:
+   a. Read で存在確認（失敗時: エラーをそのまま報告して停止）
+   b. プランファイルとして内容を読み込み、変数 PLAN_CONTENT に保持する
+   c. task-id = ファイル名（拡張子なし）を小文字化し、`[a-z0-9-]` 以外をハイフンに置換
+   d. バリデーション: task-id が空、または `..` を含む場合は停止
+   例: `~/.claude/plans/buzzing-kindling-jellyfish.md` → task-id: `buzzing-kindling-jellyfish`
+
+2. それ以外の場合（テキスト変更依頼）:
+   a. ユーザーにタスク ID を確認する（`[a-z0-9-]` のみ許可）
+   b. 変更依頼テキスト = $ARGUMENTS をそのまま使用
+   例: `/tdd-flow ページネーション追加` → 「タスク ID を入力してください（英小文字・数字・ハイフン）」→ `pagination`
+
+3. 出力先ディレクトリ: `docs/tdd/<task-id>/`
+   - 同名ディレクトリが既存の場合: 上書き（再実行として扱う）
+
+以降のステップでは決定した task-id を使用する。各サブエージェントの prompt では `TASK_ID={task-id}` として渡す（task-id と TASK_ID は同一の値）。
+
 ## STEP 1: 既存コード分析（初回のみ）
 完了ゲート（スキップ判定）: `docs/rev/tasks.md` と `docs/rev/design.md` の両方が存在するか？
 - 両方存在 → スキップ
@@ -31,22 +52,23 @@ description: "既存プロジェクトへの機能追加・変更を TDD ワー�
 
 ## STEP 2: TDD 要件定義
 Agent ツールで tsumiki-req-writer を呼び出す。
-prompt: 「TSUMIKI_PREFIX={検出パス}, 変更依頼: {$ARGUMENTS} で tsumiki-req-writer として動作してください。」
-完了確認: `docs/tdd/requirements.md` が生成されていること
+prompt（プランファイル指定時）: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-req-writer として動作してください。変更依頼: {PLAN_CONTENT}」
+prompt（テキスト指定時）: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-req-writer として動作してください。変更依頼: {$ARGUMENTS}」
+完了確認: `docs/tdd/<task-id>/requirements.md` が生成されていること
 
 ## STEP 3: テストケース生成
 Agent ツールで tsumiki-test-writer を呼び出す。
-prompt: 「TSUMIKI_PREFIX={検出パス} で tsumiki-test-writer として動作してください。」
+prompt: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-test-writer として動作してください。」
 完了確認: サブエージェントの完了報告を確認し、テストファイルが生成されテスト実行で FAIL であることを確認
 
 ## STEP 4: TDD 実装
 Agent ツールで tsumiki-implementer を呼び出す。
-prompt: 「TSUMIKI_PREFIX={検出パス} で tsumiki-implementer として動作してください。」
+prompt: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-implementer として動作してください。」
 完了確認: サブエージェントの完了報告を確認し、テスト実行で PASS であることを確認
 
 ## STEP 5: 完了検証
 Agent ツールで tsumiki-verifier を呼び出す。
-prompt: 「TSUMIKI_PREFIX={検出パス} で tsumiki-verifier として動作してください。」
+prompt: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-verifier として動作してください。」
 完了確認: 判定が「完了」
 
 ## 全完了時の報告
