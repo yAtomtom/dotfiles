@@ -17,5 +17,6 @@ Bash実行はClaude Codeプラットフォームによりプランモードを�
 
 ## プラン承認後の自動実装禁止
 
-この制御は PostToolUse hook（`posttooluse-exitplan-guard.sh`）で管理。
-ExitPlanMode 後に systemMessage を注入し、自動実装を抑止する。
+この制御は2層の Hook で管理:
+1. PostToolUse hook（`posttooluse-exitplan-guard.sh`）: ExitPlanMode 後に lock ファイル作成 + systemMessage 注入
+2. PreToolUse hook（`pretooluse-plan-lock.sh`）: lock 存在時に Edit/Write を deny。Skill 呼び出しで lock 解除

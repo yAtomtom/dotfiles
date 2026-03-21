@@ -216,6 +216,14 @@
             "command": "{{HOME}}/.claude/hooks/rtk-rewrite.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{HOME}}/.claude/hooks/pretooluse-plan-lock.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
