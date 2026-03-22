@@ -1,5 +1,9 @@
 ---
-description: "既存プロジェクトへの機能追加・変更を TDD ワークフローで実行する。例: /tdd-flow ~/.claude/plans/plan-name.md または /tdd-flow ページネーション追加"
+name: tdd-flow
+description: "既存プロジェクトへの機能追加・変更を TDD ワークフローで実行する。/tdd-flow ~/.claude/plans/plan-name.md または /tdd-flow ページネーション追加 で使用する。"
+disable-model-invocation: true
+argument-hint: "<plan-file.md> または <変更依頼テキスト>"
+allowed-tools: Agent, Read, Glob, Bash
 ---
 
 以下の変更依頼に対して TDD ワークフローを順序保持で実行してください。
@@ -42,6 +46,7 @@ $ARGUMENTS を解析:
 
 3. 出力先ディレクトリ: `docs/tdd/<task-id>/`
    - 同名ディレクトリが既存の場合: 上書き（再実行として扱う）
+   - Bash で `mkdir -p docs/tdd/<task-id>/` を実行してディレクトリを確保する
 
 以降のステップでは決定した task-id を使用する。各サブエージェントの prompt では `TASK_ID={task-id}` として渡す（task-id と TASK_ID は同一の値）。
 
@@ -72,7 +77,11 @@ prompt: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-implemen
 ## STEP 5: 完了検証
 Agent ツールで tsumiki-verifier を呼び出す。
 prompt: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-verifier として動作してください。」
-完了確認: 判定が「完了」
+完了確認:
+- サブエージェントの報告に「判定」セクションを確認する
+  - 「完了」→ 全完了として報告に進む
+  - 「要修正」→ 要修正の詳細をユーザーに報告して停止
+  - 判定セクションが見つからない → verifier の出力をそのままユーザーに提示し、手動確認を依頼
 
 ## 全完了時の報告
 - 変更内容の要約
