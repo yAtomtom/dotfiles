@@ -38,6 +38,11 @@ presets:
       - "$HOME/github.com/yAtomtom/claude-notes"  # ~/.claude/notes の symlink 先
     allow-keychain: true
 
+  # プロジェクト対応 dotfiles リポジトリ (env var は claude()/copilot_base() が設定)
+  dotfiles-repo:
+    allow:
+      - "$CAGE_DOTFILES_DIR"
+
   # Copilot CLI固有
   copilot-cli:
     allow:
@@ -55,6 +60,7 @@ auto-presets:
     presets:
       - claude-code
       - project
+      - dotfiles-repo
       - tmp
       - ruby
 
@@ -62,5 +68,6 @@ auto-presets:
     presets:
       - copilot-cli
       - project
+      - dotfiles-repo
       - tmp
       - ruby

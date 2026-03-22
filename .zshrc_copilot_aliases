@@ -91,7 +91,28 @@ copilot_base() {
     --deny-tool "shell(gcloud:*)"
     --deny-tool "shell(az:*)"
   )
-  command cage -config "$HOME/.config/cage/presets.yml" copilot "${args[@]}" "$@"
+  # プロジェクト対応 dotfiles ディレクトリの導出（claude() と同一ロジック）
+  local repo_name dotfiles_dir=""
+  repo_name=$(basename "$(git remote get-url origin 2>/dev/null)" .git) 2>/dev/null || true
+  if [[ -n "$repo_name" && "$repo_name" =~ ^[A-Za-z0-9._-]+$ ]]; then
+    dotfiles_dir="$HOME/github.com/yAtomtom/${repo_name}-dotfiles"
+  fi
+
+  # プロジェクトルート直下の symlink ターゲットを cage -allow に追加
+  local extra_allows=()
+  for link in ./*(@N); do
+    local target="${link:A}"
+    if [[ -n "$target" && -d "$target" && "$target" != "$PWD"* ]]; then
+      extra_allows+=(-allow "$target")
+    fi
+  done
+
+  if [[ -n "$dotfiles_dir" && -d "$dotfiles_dir" ]]; then
+    CAGE_DOTFILES_DIR="$dotfiles_dir" \
+      command cage -config "$HOME/.config/cage/presets.yml" "${extra_allows[@]}" copilot "${args[@]}" "$@"
+  else
+    command cage -config "$HOME/.config/cage/presets.yml" "${extra_allows[@]}" copilot "${args[@]}" "$@"
+  fi
 }
 
 # copilot-safe

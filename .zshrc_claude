@@ -4,7 +4,30 @@ claude() {
   if xattr "$bin" 2>/dev/null | rg -q 'com.apple.quarantine'; then
     xattr -dr com.apple.quarantine "$bin"
   fi
-  command cage -config "$HOME/.config/cage/presets.yml" claude "$@"
+  # プロジェクト対応 dotfiles ディレクトリの導出
+  # git remote get-url を使用（worktree でも正しいリポジトリ名が取れる）
+  local repo_name dotfiles_dir=""
+  repo_name=$(basename "$(git remote get-url origin 2>/dev/null)" .git) 2>/dev/null || true
+  if [[ -n "$repo_name" && "$repo_name" =~ ^[A-Za-z0-9._-]+$ ]]; then
+    dotfiles_dir="$HOME/github.com/yAtomtom/${repo_name}-dotfiles"
+  fi
+
+  # プロジェクトルート直下の symlink ターゲットを cage -allow に追加
+  # macOS sandbox は symlink 解決後の実パスで制御するため、project preset だけではカバーできない
+  local extra_allows=()
+  for link in ./*(@N); do
+    local target="${link:A}"  # zsh 組み込み realpath
+    if [[ -n "$target" && -d "$target" && "$target" != "$PWD"* ]]; then
+      extra_allows+=(-allow "$target")
+    fi
+  done
+
+  if [[ -n "$dotfiles_dir" && -d "$dotfiles_dir" ]]; then
+    CAGE_DOTFILES_DIR="$dotfiles_dir" \
+      command cage -config "$HOME/.config/cage/presets.yml" "${extra_allows[@]}" claude "$@"
+  else
+    command cage -config "$HOME/.config/cage/presets.yml" "${extra_allows[@]}" claude "$@"
+  fi
 }
 
 _copy_gitignored_files() {
