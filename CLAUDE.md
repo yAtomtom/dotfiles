@@ -241,8 +241,8 @@ tsumiki コマンドファイル（Tier 2: プロジェクト固有）を動的�
 tsumiki コマンドファイルの更新やエージェントの変更後、以下を確認する:
 
 1. **プラン入力の検証**: `/tdd-flow <plan-file>` で STEP 3（tsumiki-test-writer）まで進み、テストファイルが生成されること
-   - STEP 2 完了ゲート: `docs/tdd/<task-id>/requirements.md` が tsumiki テンプレートの5セクション見出しを含む
-   - STEP 3 完了ゲート: tsumiki-test-writer がテストファイルを生成し、テスト実行で少なくとも1つが FAIL
+   - STEP 2 完了ゲート: `docs/tdd/<task-id>/requirements.md` が存在し、先頭20行に見出し（`#`）が1つ以上含まれる
+   - STEP 3 完了ゲート: サブエージェントが報告したテストファイルパスが存在し、テスト実行で少なくとも1つが FAIL
 2. **テキスト入力の検証**: `/tdd-flow <テキスト>` で STEP 2 完了ゲート（`docs/tdd/<task-id>/requirements.md` 生成）を通過すること
    - 出力先が `docs/tdd/<task-id>/requirements.md` であること（tsumiki の `docs/implements/` ではない）
 3. **並列実行の検証**: 異なる plan ファイル（例: `plan-a.md`, `plan-b.md`）で2回実行し、`docs/tdd/plan-a/` と `docs/tdd/plan-b/` が共存すること

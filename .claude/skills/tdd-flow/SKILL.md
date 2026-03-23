@@ -47,6 +47,7 @@ $ARGUMENTS を解析:
 3. 出力先ディレクトリ: `docs/tdd/<task-id>/`
    - 同名ディレクトリが既存の場合: 上書き（再実行として扱う）
    - Bash で `mkdir -p docs/tdd/<task-id>/` を実行してディレクトリを確保する
+   - 終了コードが 0 であることを確認する。失敗時は停止
 
 以降のステップでは決定した task-id を使用する。各サブエージェントの prompt では `TASK_ID={task-id}` として渡す（task-id と TASK_ID は同一の値）。
 
@@ -62,17 +63,28 @@ $ARGUMENTS を解析:
 Agent ツールで tsumiki-req-writer を呼び出す。
 prompt（プランファイル指定時）: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id}, INPUT_TYPE=plan で tsumiki-req-writer として動作してください。変更依頼: {PLAN_CONTENT}」
 prompt（テキスト指定時）: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-req-writer として動作してください。変更依頼: {$ARGUMENTS}」
-完了確認: `docs/tdd/<task-id>/requirements.md` が生成されていること
+完了確認（オーケストレーター自身が実行）:
+1. Glob で `docs/tdd/<task-id>/requirements.md` の存在を確認する
+2. Read で先頭20行を読み、見出し（`#`）が1つ以上あることを確認する
+3. 条件を満たさない場合: サブエージェントの出力を報告し、停止する
 
 ## STEP 3: テストケース生成
 Agent ツールで tsumiki-test-writer を呼び出す。
 prompt: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-test-writer として動作してください。既存のテストファイルがある場合は新規ファイルを作成せず、既存ファイルにテストを追加してください。」
-完了確認: サブエージェントの完了報告を確認し、テストファイルが生成または更新され、新規追加テストの実行で少なくとも1つのテストが FAIL であること（= 新機能が未実装であることの証拠）を確認
+完了確認（オーケストレーター自身が実行）:
+1. サブエージェントの完了報告にテストファイルパスが含まれることを確認する。含まれない場合: 停止
+2. 報告されたテストファイルパスを Glob で存在確認する
+3. サブエージェントの完了報告でテスト実行結果に少なくとも1つの FAIL があることを確認する
+4. いずれかの条件を満たさない場合: 停止
 
 ## STEP 4: TDD 実装
 Agent ツールで tsumiki-implementer を呼び出す。
 prompt: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-implementer として動作してください。」
-完了確認: サブエージェントの完了報告を確認し、テスト実行で PASS であることを確認
+完了確認（オーケストレーター自身が実行）:
+1. サブエージェントの完了報告にテストファイルパスが含まれることを確認する。含まれない場合: 停止
+2. 報告されたテストファイルパスを Glob で存在確認する
+3. サブエージェントの完了報告でテスト実行結果が全て PASS であることを確認する
+4. 条件を満たさない場合: 停止
 
 ## STEP 5: 完了検証
 Agent ツールで tsumiki-verifier を呼び出す。

@@ -7,6 +7,11 @@ maxTurns: 10
 
 あなたはユーザーの変更依頼を TDD 要件ファイルに変換するエージェントです。
 
+## 絶対ルール（コマンドファイルの指示より優先）
+
+- 出力ファイルパスは **`docs/tdd/{TASK_ID}/requirements.md`** のみ。tsumiki コマンドが指定する `docs/implements/...` パスは使用しない
+- Write ツールで上記パスにファイルを書き込むことが完了の必須条件
+
 ## 事前準備: tsumiki コマンドファイルの読み込み
 
 prompt で受け取った TSUMIKI_PREFIX と TASK_ID を使う。
@@ -14,6 +19,8 @@ prompt で受け取った TSUMIKI_PREFIX と TASK_ID を使う。
 以下のファイルを Read で読み込む:
 
 `{TSUMIKI_PREFIX}/tdd-requirements.md`
+
+INPUT_TYPE=plan の場合、読み込んだファイルの `<requirements_template>` タグの内容のみを使用し、それ以外のセクション（step, context, rules 等）は無視する。
 
 Read に失敗した場合はエラーをそのまま報告して停止する。フォールバックは行わない。
 
