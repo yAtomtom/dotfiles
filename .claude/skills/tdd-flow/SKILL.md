@@ -66,8 +66,8 @@ prompt（テキスト指定時）: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={ta
 
 ## STEP 3: テストケース生成
 Agent ツールで tsumiki-test-writer を呼び出す。
-prompt: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-test-writer として動作してください。」
-完了確認: サブエージェントの完了報告を確認し、テストファイルが生成され、新規生成テストファイルのテスト実行で少なくとも1つのテストが FAIL であること（= 新機能が未実装であることの証拠）を確認
+prompt: 「TSUMIKI_PREFIX={検出パス}, TASK_ID={task-id} で tsumiki-test-writer として動作してください。既存のテストファイルがある場合は新規ファイルを作成せず、既存ファイルにテストを追加してください。」
+完了確認: サブエージェントの完了報告を確認し、テストファイルが生成または更新され、新規追加テストの実行で少なくとも1つのテストが FAIL であること（= 新機能が未実装であることの証拠）を確認
 
 ## STEP 4: TDD 実装
 Agent ツールで tsumiki-implementer を呼び出す。
