@@ -59,6 +59,7 @@ SYMLINK_FILES=(
   ".claude/skills/skill-auditor/scripts/collect_skills.py"
   ".claude/skills/skill-auditor/scripts/generate_report.py"
   ".claude/skills/skill-auditor/scripts/apply_patches.py"
+  ".claude/skills/tdd-flow/SKILL.md"
   ".claude/commands/skill-auditor.md"
   ".claude/commands/commit.md"
   ".claude/commands/pr.md"
