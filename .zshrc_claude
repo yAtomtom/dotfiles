@@ -43,6 +43,13 @@ _copy_gitignored_files() {
     ".claude/settings.local.json"
   )
 
+  # Large gitignored dirs: symlink to avoid costly copy.
+  # Top-level so claude() auto-detects for cage -allow (.zshrc_claude:18)
+  local symlink_targets=(
+    "vendor"
+    "node_modules"
+  )
+
   echo "📋 Copying config files to worktree..."
   local copied=false
   for target in "${targets[@]}"; do
@@ -53,6 +60,16 @@ _copy_gitignored_files() {
         && echo "  ✅ $target" \
         && copied=true \
         || echo "  ⚠️  Failed: $target"
+    fi
+  done
+
+  for target in "${symlink_targets[@]}"; do
+    local src_path="$src/$target"
+    if [[ -d "$src_path" ]]; then
+      ln -s "$src_path" "$dst/$target" \
+        && echo "  🔗 $target (symlink)" \
+        && copied=true \
+        || echo "  ⚠️  Failed: $target (symlink)"
     fi
   done
 
