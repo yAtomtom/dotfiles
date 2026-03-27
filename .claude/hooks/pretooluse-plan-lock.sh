@@ -27,9 +27,22 @@ if [[ "$TOOL_NAME" == "Skill" ]]; then
   exit 0
 fi
 
-# Edit/Write → deny
+# Edit/Write → deny (with CLAUDE_POST_PLAN_ACTION-aware message)
 if [[ "$TOOL_NAME" == "Edit" || "$TOOL_NAME" == "Write" ]]; then
-  jq -n --arg reason "プラン承認後ロック中。/unlock を実行して解除するか、非常時はユーザーに端末で直接 ! rm $LOCK_FILE を実行してもらってください。" \
+  POST_PLAN_ACTION="${CLAUDE_POST_PLAN_ACTION:-}"
+  ALLOWED_ACTIONS=("tdd-flow")
+  VALID=false
+  if [[ "$POST_PLAN_ACTION" =~ ^[a-z0-9-]+$ ]]; then
+    for allowed in "${ALLOWED_ACTIONS[@]}"; do
+      [[ "$POST_PLAN_ACTION" == "$allowed" ]] && VALID=true && break
+    done
+  fi
+  if [[ "$VALID" == true ]]; then
+    REASON="プラン承認後ロック中。/${POST_PLAN_ACTION} を実行して実装を開始してください。"
+  else
+    REASON="プラン承認後ロック中。/unlock を実行して解除するか、非常時はユーザーに端末で直接 ! rm $LOCK_FILE を実行してもらってください。"
+  fi
+  jq -n --arg reason "$REASON" \
     '{
       "hookSpecificOutput": {
         "hookEventName": "PreToolUse",
