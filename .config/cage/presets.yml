@@ -1,4 +1,4 @@
-# cage presets - Claude Code / Copilot CLI サンドボックス設定
+# cage presets - Claude Code / Copilot CLI / takt サンドボックス設定
 # 原則: ファイルシステム書き込みのみ制限（読み取り・ネットワーク・プロセスは制限対象外）
 
 presets:
@@ -38,7 +38,7 @@ presets:
       - "$HOME/github.com/yAtomtom/claude-notes"  # ~/.claude/notes の symlink 先
     allow-keychain: true
 
-  # プロジェクト対応 dotfiles リポジトリ (env var は claude()/copilot_base() が設定)
+  # プロジェクト対応 dotfiles リポジトリ (env var は claude()/copilot_base()/takt() が設定)
   dotfiles-repo:
     allow:
       - "$CAGE_DOTFILES_DIR"
@@ -55,6 +55,12 @@ presets:
       - "$HOME/copilot-sandbox"
     allow-keychain: true
 
+  # takt CLI固有 (TAKT Agent Koordination Topology)
+  takt-cli:
+    allow:
+      - "$HOME/.takt"                                      # グローバル設定・ログ・アナリティクス
+      - "$HOME/.config/configstore/update-notifier-takt.json"  # npm update-notifier
+
 auto-presets:
   - command: claude
     presets:
@@ -67,6 +73,16 @@ auto-presets:
   - command: copilot
     presets:
       - copilot-cli
+      - project
+      - dotfiles-repo
+      - tmp
+      - ruby
+
+  - command: takt
+    presets:
+      - takt-cli
+      - claude-code      # 内部で Claude Agent SDK を使用（インプロセス）
+      - copilot-cli      # 内部で copilot を child_process.spawn
       - project
       - dotfiles-repo
       - tmp
