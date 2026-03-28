@@ -25,7 +25,9 @@ Bash実行はClaude Codeプラットフォームによりプランモードを�
 
 **Claude は `/unlock` を自発的に実行してはならない。** lock の目的は Claude の自動実装防止であり、解除はユーザーの意思で行うもの。Claude が deny された場合はユーザーに `/unlock` の実行を案内すること。
 
-**例外**: `CLAUDE_POST_PLAN_ACTION` 環境変数が設定されている場合、ExitPlanMode 後に該当スキルの自動実行は許可される。lock は Skill 呼び出しにより通常通り解除される。この場合も ExitPlanMode がエラーを返した場合は自動実行しない。
+**例外1**: `CLAUDE_POST_PLAN_ACTION` 環境変数が設定されている場合、ExitPlanMode 後に該当スキルの自動実行は許可される。lock は Skill 呼び出しにより通常通り解除される。この場合も ExitPlanMode がエラーを返した場合は自動実行しない。
+
+**例外2**: `/tdd-flow` は STEP 0 でプランロックを自動解除する。ユーザーの明示的な `/tdd-flow` 実行（手動実行・`CLAUDE_POST_PLAN_ACTION` 経由の自動実行いずれも）は実装開始の意思表示として扱う。
 
 ## プラン承認後の自動アクション（環境変数制御）
 

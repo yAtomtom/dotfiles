@@ -224,7 +224,7 @@ tsumiki コマンドファイル（Tier 2: プロジェクト固有）を動的�
 
 | STEP | エージェント | 内容 | 完了ゲート |
 |------|-------------|------|-----------|
-| 0 | - | tsumiki コマンドパス検出 | TSUMIKI_PREFIX 決定 |
+| 0 | - | プランロック解除 & tsumiki コマンドパス検出 | ロック解除 + TSUMIKI_PREFIX 決定 |
 | 0.5 | - | 入力解析・タスク ID 決定 | task-id 確定 |
 | 1 | tsumiki-analyzer | 既存コード分析（初回のみ） | `docs/rev/tasks.md` + `docs/rev/design.md` 存在 |
 | 2 | tsumiki-req-writer | TDD 要件定義 | `docs/tdd/<task-id>/requirements.md` 生成 |
@@ -235,6 +235,7 @@ tsumiki コマンドファイル（Tier 2: プロジェクト固有）を動的�
 - プランファイル入力時（INPUT_TYPE=plan）: tsumiki テンプレートのセクション構造（機能の概要 / 入力・出力の仕様 / 制約条件 / 想定される使用例 / EARS対応関係）にマッピングして requirements.md を生成
 - テキスト入力時: tsumiki コマンドの指示に従って生成
 - 並列実行: 異なる task-id であれば同一ブランチで複数タスクを同時実行可能（`docs/tdd/<task-id>/` で分離）
+- plan mode からの実行時、STEP 0 でプランロック（`/tmp/.claude-plan-lock-*`）を自動解除する（`/unlock` 不要）
 
 #### 回帰検証の実施方法
 

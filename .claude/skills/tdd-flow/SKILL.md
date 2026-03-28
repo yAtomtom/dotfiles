@@ -17,7 +17,10 @@ allowed-tools: Agent, Read, Glob, Bash
 後続ステップは実行しない。ステップ間のリトライは行わず、失敗原因と推奨対応を提示する。オーケストレーターがサブエージェントを代行して手動実行してはならない。
 ただし、ステップ内部での自己修正（例: tsumiki-implementer の Green フェーズでの最大3回リトライ）はサブエージェントの責務であり許可する。
 
-## STEP 0: tsumiki コマンドパス確認（Glob で検出）
+## STEP 0: プランロック解除 & tsumiki コマンドパス確認
+
+0. プランロックが存在する場合、Bash で削除する（/tdd-flow の明示的な実行は実装開始の意思表示であり、ロック解除は妥当）:
+   `find /private/tmp -maxdepth 1 -name ".claude-plan-lock-*" -delete 2>/dev/null; find /private/tmp -maxdepth 1 -name ".claude-plan-lock" -delete 2>/dev/null`
 1. `.claude/commands/tsumiki/` ディレクトリが存在するか確認
 2. 存在すれば TSUMIKI_PREFIX=`.claude/commands/tsumiki`
 3. 存在しなければ `.claude/commands/tdd-requirements.md` が存在するか確認
