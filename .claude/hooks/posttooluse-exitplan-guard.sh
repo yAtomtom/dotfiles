@@ -16,7 +16,15 @@ read -r TOOL_NAME SESSION_ID < <(echo "$INPUT" | jq -r '[.tool_name // "", .sess
 
 if [[ "$TOOL_NAME" == "ExitPlanMode" ]]; then
   ALLOWED_ACTIONS=("tdd-flow")
-  DEFAULT_MSG="プラン承認完了。自動実装を開始せず、プランファイルのパスと次のアクション候補（Copilot クロスレビュー、/tdd-flow 等）を提示して停止すること。実装開始はユーザーの明示的な指示（/tdd-flow、「実装して」、「進めて」等）を待つ。"
+
+  # Detect the most recently modified plan file (edited just before ExitPlanMode)
+  PLAN_FILE=$(ls -t "${HOME}/.claude/plans/"*.md 2>/dev/null | head -1)
+
+  if [[ -n "$PLAN_FILE" ]]; then
+    DEFAULT_MSG="プラン承認完了。自動実装を開始せず、次のアクション候補を提示して停止すること。\nプランファイル: ${PLAN_FILE}\n次のアクション候補: /tdd-flow '${PLAN_FILE}'、Copilot クロスレビュー等。実装開始はユーザーの明示的な指示を待つ。"
+  else
+    DEFAULT_MSG="プラン承認完了。自動実装を開始せず、次のアクション候補（Copilot クロスレビュー、/tdd-flow 等）を提示して停止すること。実装開始はユーザーの明示的な指示を待つ。"
+  fi
 
   # ExitPlanMode がエラーの場合は自動実行しない（未承認プランへの実装防止）
   TOOL_ERROR=$(echo "$INPUT" | jq -r '.tool_error // empty')
@@ -55,7 +63,7 @@ if [[ "$TOOL_NAME" == "ExitPlanMode" ]]; then
     done
 
     if [[ "$VALID" == true ]]; then
-      MSG="プラン承認完了。/${POST_PLAN_ACTION} を自動実行して実装を開始してください。"
+      MSG="プラン承認完了。/${POST_PLAN_ACTION} ${PLAN_FILE:-} を自動実行して実装を開始してください。"
     else
       echo "[warn] CLAUDE_POST_PLAN_ACTION='${POST_PLAN_ACTION}' is not in allowed list, ignoring." >&2
       MSG="$DEFAULT_MSG"
