@@ -78,6 +78,8 @@ auto-presets:
       - tmp
       - ruby
 
+  # takt は --provider で動的にエージェントを切替えるため、全プロバイダの権限を常時合成する
+  # （引数パースの複雑さを回避するトレードオフ）
   - command: takt
     presets:
       - takt-cli
