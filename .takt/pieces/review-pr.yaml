@@ -1,19 +1,15 @@
-name: review-code
-description: 実装差分のコードレビューとクロスレビュー
+name: review-pr
+description: GitHub PR の差分レビュー
 max_movements: 10
-initial_movement: review
+initial_movement: review-pr
 
 piece_config:
   provider_options:
     codex:
       network_access: true
 
-personas:
-  custom-reviewer: ./agents/reviewer.md
-  custom-supervisor: ./agents/supervisor.md
-
 movements:
-  - name: review
+  - name: review-pr
     persona: custom-reviewer
     edit: false
     provider_options:
@@ -21,17 +17,18 @@ movements:
         allowed_tools: [Read, Glob, Grep, Bash]
     output_contracts:
       report:
-        - name: 00-review.md
+        - name: 00-pr-review.md
     instruction: |
-      コードレビューを実施してください。
-      1. git diff で実装差分を確認する（差分がない場合は git show HEAD でコミット内容を確認）
-      2. 関連ファイルを読み込み、変更の文脈を理解する
-      3. レビュー方針に基づいてレビュー結果をレポートに出力する
+      GitHub PR をレビューしてください。
+      1. gh pr view でPRの概要を確認する
+      2. gh pr diff でPRの変更差分を確認する
+      3. 関連ファイルを読み込み、変更の文脈を理解する
+      4. レビュー結果をレポートに出力する
       Task: {task}
     rules:
       - condition: レビュー完了
         next: cross-review
-      - condition: レビュー対象が存在しない
+      - condition: PR が見つからない
         next: ABORT
 
   - name: cross-review
@@ -85,13 +82,12 @@ movements:
         allowed_tools: [Read, Glob, Grep]
     output_contracts:
       report:
-        - name: 00-review.md
+        - name: 00-pr-review.md
     instruction: |
       クロスレビューの指摘を基にレビュー内容を改善してください。
-      コード修正は行わず、レビューレポートの改善のみ行ってください。
       レポートディレクトリ {report_dir} を参照してください。
     rules:
-      - condition: レビュー改善完了
+      - condition: 改善完了
         next: cross-review
       - condition: 改善不要
         next: supervise
@@ -115,7 +111,7 @@ movements:
       - condition: 承認
         next: COMPLETE
       - condition: 差し戻し
-        next: review
+        next: review-pr
 
 loop_monitors:
   - cycle:

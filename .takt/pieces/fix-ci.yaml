@@ -8,12 +8,6 @@ piece_config:
     codex:
       network_access: true
 
-personas:
-  custom-ci-analyzer: ./agents/ci-analyzer.md
-  custom-coder: ./agents/coder.md
-  custom-reviewer: ./agents/reviewer.md
-  custom-supervisor: ./agents/supervisor.md
-
 movements:
   - name: analyze-ci
     persona: custom-ci-analyzer

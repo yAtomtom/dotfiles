@@ -8,10 +8,6 @@ piece_config:
     codex:
       network_access: true
 
-personas:
-  custom-reviewer: ./agents/reviewer.md
-  custom-supervisor: ./agents/supervisor.md
-
 movements:
   - name: review-comments
     persona: custom-reviewer

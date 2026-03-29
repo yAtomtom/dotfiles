@@ -8,10 +8,6 @@ piece_config:
     codex:
       network_access: true
 
-personas:
-  custom-coder: ./agents/coder.md
-  custom-reviewer: ./agents/reviewer.md
-  custom-supervisor: ./agents/supervisor.md
 
 movements:
   - name: implement

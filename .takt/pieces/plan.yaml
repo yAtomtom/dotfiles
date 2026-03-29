@@ -8,11 +8,6 @@ piece_config:
     codex:
       network_access: true
 
-personas:
-  custom-planner: ./agents/planner.md
-  custom-reviewer: ./agents/reviewer.md
-  custom-supervisor: ./agents/supervisor.md
-
 movements:
   - name: design
     persona: custom-planner
