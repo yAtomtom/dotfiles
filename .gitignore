@@ -47,5 +47,9 @@
 .claude/skill-report/
 
 # takt auto-generated
+.takt/config.yaml
 .takt/reports/
+.takt/runs/
 .takt/logs/
+.takt/tasks.yaml
+.takt/tasks/
