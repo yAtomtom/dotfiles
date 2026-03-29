@@ -36,6 +36,8 @@ presets:
       - "$HOME/.local/share/uv"
       - "$HOME/claude-sandbox"
       - "$HOME/github.com/yAtomtom/claude-notes"  # ~/.claude/notes の symlink 先
+      - "$HOME/.copilot"         # クロスレビュー: Claude → Copilot 呼び出し時の書き込み先
+      - "$HOME/copilot-sandbox"  # クロスレビュー: Copilot のサンドボックス出力先
     allow-keychain: true
 
   # プロジェクト対応 dotfiles リポジトリ (env var は claude()/copilot_base()/takt() が設定)
