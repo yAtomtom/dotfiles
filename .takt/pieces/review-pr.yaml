@@ -5,7 +5,7 @@ initial_movement: review-pr
 
 piece_config:
   provider_options:
-    codex:
+    copilot:
       network_access: true
 
 personas:
@@ -60,7 +60,7 @@ movements:
       - name: codex-meta-review
         persona: custom-reviewer
         policy: [design, coding]
-        provider: codex
+        provider: copilot
         edit: false
         allowed_tools: [Read, Glob, Grep]
         output_contracts:
