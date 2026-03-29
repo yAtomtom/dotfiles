@@ -152,10 +152,14 @@ movements:
           format: coder-decisions
     instruction: |
       設計案に基づいて TDD で実装してください。
-      1. レポートディレクトリ {report_dir} 内の設計案（00-plan.md）を参照する
+      1. レポートディレクトリ {report_dir} 内の設計案（00-plan.md）を参照し、変更スコープとインターフェースを把握する
       2. テストを先に書く（Red）
+         - テストを実行し、追加したテストが FAIL することを確認してから次へ進む
       3. テストを通す最小限の実装（Green）
+         - テストを実行し、全件 PASS を確認してから次へ進む
       4. リファクタリング（Refactor）
+         - テストを実行し、全件 PASS が維持されていることを確認する
+      各フェーズでテスト実行結果（件数・PASS/FAIL）を明示すること。
       Task: {task}
     rules:
       - condition: 実装完了、全テストパス
