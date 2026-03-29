@@ -23,11 +23,14 @@ movements:
     persona: custom-reviewer
     policy: [design, coding]
     edit: false
-    allowed_tools: [Read, Glob, Grep, Bash]
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash]
     output_contracts:
       report:
         - name: 00-review.md
-    instruction_template: |
+          format: ai-review
+    instruction: |
       コードレビューを実施してください。
       1. git diff で実装差分を確認する（差分がない場合は git show HEAD でコミット内容を確認）
       2. 関連ファイルを読み込み、変更の文脈を理解する
@@ -45,11 +48,14 @@ movements:
         persona: custom-reviewer
         policy: [design, coding]
         edit: false
-        allowed_tools: [Read, Glob, Grep]
+        provider_options:
+          claude:
+            allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 01-claude-meta-review.md
-        instruction_template: |
+              format: ai-review
+        instruction: |
           レビュー結果の妥当性を検証してください。
           過剰な指摘や見落としがないか確認してください。
           {previous_response}
@@ -62,11 +68,11 @@ movements:
         provider: copilot
         model: gpt-5.3-codex
         edit: false
-        allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 02-copilot-meta-review.md
-        instruction_template: |
+              format: ai-review
+        instruction: |
           レビュー結果の妥当性を検証してください。
           指摘の優先度と実用性を評価してください。
           {previous_response}
@@ -85,11 +91,14 @@ movements:
     edit: false
     session: refresh
     pass_previous_response: false
-    allowed_tools: [Read, Glob, Grep]
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep]
     output_contracts:
       report:
         - name: 00-review.md
-    instruction_template: |
+          format: ai-review
+    instruction: |
       クロスレビューの指摘を基にレビュー内容を改善してください。
       コード修正は行わず、レビューレポートの改善のみ行ってください。
       レポートディレクトリ {report_dir} を参照してください。
@@ -106,12 +115,16 @@ movements:
     edit: false
     session: refresh
     pass_previous_response: false
-    allowed_tools: [Read, Glob, Grep]
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep]
     output_contracts:
       report:
         - name: 03-validation.md
+          format: supervisor-validation
         - name: 04-summary.md
-    instruction_template: |
+          format: summary
+    instruction: |
       レビュー結果の最終検証を行ってください。
       レポートディレクトリ {report_dir} を参照してください。
     rules:
@@ -127,7 +140,7 @@ loop_monitors:
     threshold: 3
     judge:
       persona: custom-supervisor
-      instruction_template: |
+      instruction: |
         レビュー改善サイクルが {iteration} 回繰り返されています。
         進捗があるか判断してください。
       rules:

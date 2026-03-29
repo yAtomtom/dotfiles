@@ -14,3 +14,32 @@ snippets:
   - name: ai commit
     keyword: aic
     snippet: aicommit
+
+  # takt pieces
+  - name: takt plan
+    keyword: tkpl
+    snippet: takt -w plan
+
+  - name: takt implement
+    keyword: tkimpl
+    snippet: takt -w implement
+
+  - name: takt review-code
+    keyword: tkrc
+    snippet: takt -w review-code
+
+  - name: takt fix-code
+    keyword: tkfc
+    snippet: takt -w fix-code
+
+  - name: takt review-pr
+    keyword: tkrp
+    snippet: takt -w review-pr
+
+  - name: takt review-comments
+    keyword: tkrcm
+    snippet: takt -w review-comments
+
+  - name: takt fix-ci
+    keyword: tkfci
+    snippet: takt -w fix-ci

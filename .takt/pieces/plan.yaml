@@ -24,12 +24,14 @@ movements:
     persona: custom-planner
     policy: design
     edit: false
-    allowed_tools: [Read, Glob, Grep, WebSearch, WebFetch]
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, WebSearch, WebFetch]
     output_contracts:
       report:
         - name: 00-plan.md
           format: plan
-    instruction_template: |
+    instruction: |
       以下のタスクについて設計を行ってください。
       1. プロジェクトの関連ファイルを読み込み、現状の設計を把握する
       2. 設計方針に基づいて設計案を作成する
@@ -47,11 +49,14 @@ movements:
         persona: custom-reviewer
         policy: [design, coding]
         edit: false
-        allowed_tools: [Read, Glob, Grep]
+        provider_options:
+          claude:
+            allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 01-claude-review.md
-        instruction_template: |
+              format: ai-review
+        instruction: |
           設計案をレビューしてください。
           観点: アーキテクチャ、変更容易性、DDD整合性
           {previous_response}
@@ -64,11 +69,11 @@ movements:
         provider: copilot
         model: gpt-5.3-codex
         edit: false
-        allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 02-copilot-review.md
-        instruction_template: |
+              format: ai-review
+        instruction: |
           設計案をレビューしてください。
           観点: 実装可能性、セキュリティ、パフォーマンス
           {previous_response}
@@ -87,12 +92,14 @@ movements:
     edit: false
     session: refresh
     pass_previous_response: false
-    allowed_tools: [Read, Glob, Grep]
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep]
     output_contracts:
       report:
         - name: 00-plan.md
           format: plan
-    instruction_template: |
+    instruction: |
       クロスレビューの指摘を検討し、妥当な指摘に対して設計案を改善してください。
       レポートディレクトリ {report_dir} 内のレビュー結果を参照してください。
     rules:
@@ -108,12 +115,16 @@ movements:
     edit: false
     session: refresh
     pass_previous_response: false
-    allowed_tools: [Read, Glob, Grep]
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep]
     output_contracts:
       report:
         - name: 03-validation.md
+          format: supervisor-validation
         - name: 04-summary.md
-    instruction_template: |
+          format: summary
+    instruction: |
       設計の最終検証を行ってください。
       レポートディレクトリ {report_dir} 内の設計案とレビュー結果を確認してください。
     rules:
@@ -129,7 +140,7 @@ loop_monitors:
     threshold: 3
     judge:
       persona: custom-supervisor
-      instruction_template: |
+      instruction: |
         cross-review と fix のサイクルが {iteration} 回繰り返されています。
         進捗があるか、同じ指摘が繰り返されているか判断してください。
       rules:

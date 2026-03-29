@@ -25,11 +25,14 @@ movements:
   - name: analyze-ci
     persona: custom-ci-analyzer
     edit: false
-    allowed_tools: [Read, Glob, Grep, Bash]
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash]
     output_contracts:
       report:
         - name: 00-ci-analysis.md
-    instruction_template: |
+          format: ai-review
+    instruction: |
       CI の失敗を分析してください。
       1. gh pr view でPRの概要を確認する
       2. gh pr checks でCI結果を確認する
@@ -50,12 +53,16 @@ movements:
     required_permission_mode: edit
     session: refresh
     pass_previous_response: false
-    allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
     output_contracts:
       report:
         - name: 01-scope.md
+          format: coder-scope
         - name: 02-decisions.md
-    instruction_template: |
+          format: coder-decisions
+    instruction: |
       CI分析結果に基づいてコードを修正してください。
       1. レポートディレクトリ {report_dir} 内の分析結果を参照する
       2. 失敗原因に対する修正を TDD で実施する
@@ -72,11 +79,14 @@ movements:
         persona: custom-reviewer
         policy: [design, coding]
         edit: false
-        allowed_tools: [Read, Glob, Grep]
+        provider_options:
+          claude:
+            allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 03-claude-review.md
-        instruction_template: |
+              format: ai-review
+        instruction: |
           CI修正の差分をレビューしてください。
           CI分析結果と修正内容の整合性を確認してください。
           {previous_response}
@@ -89,11 +99,11 @@ movements:
         provider: copilot
         model: gpt-5.3-codex
         edit: false
-        allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 04-copilot-review.md
-        instruction_template: |
+              format: ai-review
+        instruction: |
           CI修正の差分をレビューしてください。
           修正がCI失敗の根本原因に対処しているか確認してください。
           {previous_response}
@@ -114,12 +124,16 @@ movements:
     required_permission_mode: edit
     session: refresh
     pass_previous_response: false
-    allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
     output_contracts:
       report:
         - name: 01-scope.md
+          format: coder-scope
         - name: 02-decisions.md
-    instruction_template: |
+          format: coder-decisions
+    instruction: |
       クロスレビューの指摘を検討し、妥当な指摘に対して修正してください。
       レポートディレクトリ {report_dir} 内のレビュー結果を参照してください。
       修正後はテストが通ることを確認してください。
@@ -137,12 +151,16 @@ movements:
     required_permission_mode: edit
     session: refresh
     pass_previous_response: false
-    allowed_tools: [Read, Glob, Grep, Bash]
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash]
     output_contracts:
       report:
         - name: 05-validation.md
+          format: supervisor-validation
         - name: 06-summary.md
-    instruction_template: |
+          format: summary
+    instruction: |
       CI修正の最終検証を行ってください。
       1. gh pr checks で修正対象のCI項目が解消される見込みか確認する
       2. 全テストが通ることを確認
@@ -162,7 +180,7 @@ loop_monitors:
     threshold: 3
     judge:
       persona: custom-supervisor
-      instruction_template: |
+      instruction: |
         修正サイクルが {iteration} 回繰り返されています。
         進捗があるか判断してください。
       rules:
