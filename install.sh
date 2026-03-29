@@ -106,11 +106,11 @@ SYMLINK_FILES=(
   ".takt/pieces/review-pr.yaml"
   ".takt/pieces/review-comments.yaml"
   ".takt/pieces/fix-ci.yaml"
-  ".takt/personas/custom-planner.md"
-  ".takt/personas/custom-coder.md"
-  ".takt/personas/custom-reviewer.md"
-  ".takt/personas/custom-supervisor.md"
-  ".takt/personas/custom-ci-analyzer.md"
+  ".takt/facets/personas/custom-planner.md"
+  ".takt/facets/personas/custom-coder.md"
+  ".takt/facets/personas/custom-reviewer.md"
+  ".takt/facets/personas/custom-supervisor.md"
+  ".takt/facets/personas/custom-ci-analyzer.md"
 )
 
 # template 対象
