@@ -127,6 +127,11 @@ TEMPLATE_FILES=(
   ".serena/serena_config.yml"
 )
 
+# copy 対象（リポジトリ内パスと配置先パスが異なるファイル。bash 3.2 互換のため "src:dst" 形式）
+COPY_FILES=(
+  "takt/config.yaml:.takt/config.yaml"
+)
+
 backup_if_exists() {
   local target="$HOME/$1"
   if [ -e "$target" ] || [ -L "$target" ]; then
@@ -142,6 +147,10 @@ backup_if_exists() {
 echo "=== Backup phase ==="
 for f in "${SYMLINK_FILES[@]}" "${TEMPLATE_FILES[@]}"; do
   backup_if_exists "$f"
+done
+for pair in "${COPY_FILES[@]}"; do
+  dst="${pair#*:}"
+  backup_if_exists "$dst"
 done
 
 echo ""
@@ -174,6 +183,27 @@ for f in "${TEMPLATE_FILES[@]}"; do
   else
     echo "  ERROR: failed to generate ~/$f"
     ERRORS+=("template: $f")
+  fi
+done
+
+echo ""
+echo "=== Copy phase ==="
+for pair in "${COPY_FILES[@]}"; do
+  src="${pair%%:*}"
+  dst="${pair#*:}"
+  if [ ! -f "$DOT_DIR/$src" ]; then
+    echo "  ERROR: source not found: $src"
+    ERRORS+=("copy: $src")
+    continue
+  fi
+  mkdir -p "$HOME/$(dirname "$dst")"
+  # 旧 symlink が残っていると cp が symlink 先を上書きするため事前に除去
+  [ -L "$HOME/$dst" ] && rm "$HOME/$dst"
+  if cp "$DOT_DIR/$src" "$HOME/$dst" 2>/dev/null; then
+    echo "  copied: $src -> ~/$dst"
+  else
+    echo "  ERROR: failed to copy $src -> ~/$dst"
+    ERRORS+=("copy: $src")
   fi
 done
 

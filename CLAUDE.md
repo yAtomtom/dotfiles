@@ -26,12 +26,13 @@ mcp-doctor /path/to/.mcp.json  # 指定ファイル
 
 ## Architecture
 
-### 2つの配置方式
+### 3つの配置方式
 
 - **symlink**: マシン固有パスを含まないファイル → `$HOME` に symlink を貼る。編集が即座にリポジトリに反映される
 - **template**: マシン固有パス（`$HOME`, GCP設定等）を含むファイル → `install.sh` で `{{placeholder}}` を `.env` の値に置換して配置。リポジトリへの反映には `export.sh` が必要
+- **copy**: リポジトリ内パスと配置先パスが異なるファイル → `install.sh` でパス変換してコピー配置。プレースホルダーは含まない。リポジトリへの反映には `export.sh` が必要
 
-対象ファイルの一覧は `install.sh` の `SYMLINK_FILES` / `TEMPLATE_FILES` 配列で定義。template 方式のファイルは `export.sh` の `TEMPLATE_FILES` にも同じパスが必要。
+対象ファイルの一覧は `install.sh` の `SYMLINK_FILES` / `TEMPLATE_FILES` / `COPY_FILES` 配列で定義。template 方式のファイルは `export.sh` の `TEMPLATE_FILES` にも同じパスが必要。copy 方式のファイルは `export.sh` の `COPY_FILES` にも同じペアが必要。
 
 ### プレースホルダー
 
@@ -67,18 +68,30 @@ git add -p
 git commit
 ```
 
+#### copy 対象ファイルを編集した場合
+
+`$HOME` 配下の実ファイルを編集した後、`export.sh` でリポジトリに反映する。
+
+```bash
+./export.sh      # 配置先ファイルをリポジトリ内パスに逆コピー（プレースホルダー置換なし）
+git add -p
+git commit
+```
+
 #### 管理対象ファイルを追加する場合
 
 1. ファイルの性質を判定する
    - マシン固有パス（`$HOME` の絶対パス等）を含む → **template**
-   - 含まない → **symlink**
+   - リポジトリ内パスと配置先パスが異なる → **copy**
+   - 上記以外 → **symlink**
    - 機密情報（API key, token）を含む → **管理対象外**（`.gitignore` に追加）
-2. `install.sh` の `SYMLINK_FILES` または `TEMPLATE_FILES` 配列にパスを追加する
-3. template の場合は `export.sh` の `TEMPLATE_FILES` にも同じパスを追加する
+2. `install.sh` の `SYMLINK_FILES` / `TEMPLATE_FILES` / `COPY_FILES` 配列にパスを追加する
+3. template の場合は `export.sh` の `TEMPLATE_FILES`、copy の場合は `export.sh` の `COPY_FILES` にも同じパス（ペア）を追加する
 4. リポジトリにファイルをコピーする
    - symlink: `cp ~/.new/file .new/file`
    - template: `./export.sh` を実行（全 template ファイルをまとめてエクスポート）
-5. `./install.sh` を実行して symlink / template 展開を確認する
+   - copy: `./export.sh` を実行（全 copy ファイルをまとめてエクスポート）
+5. `./install.sh` を実行して symlink / template / copy 展開を確認する
 
 #### 管理対象ファイルを削除する場合
 

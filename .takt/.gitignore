@@ -4,9 +4,6 @@
 # This file itself
 !.gitignore
 
-# Project configuration
-!config.yaml
-
 # Facets and pieces (version-controlled)
 !pieces/
 !pieces/**

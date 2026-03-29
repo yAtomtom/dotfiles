@@ -30,6 +30,25 @@ TEMPLATE_FILES=(
   ".serena/serena_config.yml"
 )
 
+# copy 対象（配置先パス → リポジトリ内パス。プレースホルダー置換なし）
+COPY_FILES=(
+  ".takt/config.yaml:takt/config.yaml"
+)
+
+echo "=== Exporting copy files ==="
+for pair in "${COPY_FILES[@]}"; do
+  src="${pair%%:*}"
+  dst="${pair#*:}"
+  if [ -f "$HOME/$src" ]; then
+    mkdir -p "$DOT_DIR/$(dirname "$dst")"
+    cp "$HOME/$src" "$DOT_DIR/$dst"
+    echo "  exported: ~/$src -> $dst"
+  else
+    echo "  skipped (not found): ~/$src"
+  fi
+done
+
+echo ""
 echo "=== Exporting template files ==="
 for f in "${TEMPLATE_FILES[@]}"; do
   src="$HOME/$f"
