@@ -57,7 +57,7 @@ movements:
         rules:
           - condition: approved
           - condition: needs_fix
-      - name: codex-meta-review
+      - name: copilot-meta-review
         persona: custom-reviewer
         policy: [design, coding]
         provider: copilot
@@ -66,7 +66,7 @@ movements:
         allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
-            - name: 02-codex-meta-review.md
+            - name: 02-copilot-meta-review.md
         instruction_template: |
           コメント分析結果の妥当性を検証してください。
           分析の優先度と実用性を評価してください。

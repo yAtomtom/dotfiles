@@ -58,7 +58,7 @@ movements:
         rules:
           - condition: approved
           - condition: needs_fix
-      - name: codex-review
+      - name: copilot-review
         persona: custom-reviewer
         policy: [design, coding]
         provider: copilot
@@ -67,7 +67,7 @@ movements:
         allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
-            - name: 02-codex-review.md
+            - name: 02-copilot-review.md
         instruction_template: |
           設計案をレビューしてください。
           観点: 実装可能性、セキュリティ、パフォーマンス

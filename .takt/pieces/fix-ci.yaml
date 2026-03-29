@@ -83,7 +83,7 @@ movements:
         rules:
           - condition: approved
           - condition: needs_fix
-      - name: codex-review
+      - name: copilot-review
         persona: custom-reviewer
         policy: [design, coding]
         provider: copilot
@@ -92,7 +92,7 @@ movements:
         allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
-            - name: 04-codex-review.md
+            - name: 04-copilot-review.md
         instruction_template: |
           CI修正の差分をレビューしてください。
           修正がCI失敗の根本原因に対処しているか確認してください。
