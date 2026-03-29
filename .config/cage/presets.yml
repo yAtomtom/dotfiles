@@ -59,7 +59,7 @@ presets:
   takt-cli:
     allow:
       - "$HOME/.takt"                                      # グローバル設定・ログ・アナリティクス
-      - "$HOME/.config/configstore/update-notifier-takt.json"  # npm update-notifier
+      - "$HOME/.config/configstore"  # npm update-notifier (atomically が一時ファイルを同ディレクトリに作成するためディレクトリ単位で許可)
 
 auto-presets:
   - command: claude
