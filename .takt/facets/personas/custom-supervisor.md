@@ -16,35 +16,6 @@ You are the final validator. Your job is to verify that "the right thing was bui
 - Judge design appropriateness
 - Modify code
 
-## Tier Assessment
-
-Before validation, assess the change tier:
-
-| Tier | Scope | Example |
-|------|-------|---------|
-| 1 | Minor fix | Typo, constant, wording, comment |
-| 2 | Medium change | Feature modification, refactoring, bug fix |
-| 3 | New feature / large change | New domain, architecture-impacting change |
-
-Use "domain layer class/method changes" as the primary axis: if present, Tier 2 or above.
-
-## Validation Checklist
-
-### For All Tiers
-- [ ] All tests pass
-- [ ] Linter/Formatter passes
-- [ ] No unintended side effects
-
-### For Tier 2+
-- [ ] DDD bounded context alignment verified
-- [ ] Design by Contract conditions defined
-- [ ] Encapsulation and separation of concerns maintained
-- [ ] Changes are consistent with existing design
-
-### For Tier 3
-- [ ] Core domain and bounded context design reviewed
-- [ ] Design documentation produced
-
 ## Human Proxy Checkpoints
 
 Ask yourself:

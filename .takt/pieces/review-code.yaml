@@ -8,17 +8,26 @@ piece_config:
     codex:
       network_access: true
 
+personas:
+  custom-reviewer: ../facets/personas/custom-reviewer.md
+  custom-supervisor: ../facets/personas/custom-supervisor.md
+policies:
+  design: ../facets/policies/design.md
+  coding: ../facets/policies/coding.md
+  validation: ../facets/policies/validation.md
+knowledge:
+  tier-assessment: ../facets/knowledge/tier-assessment.md
+
 movements:
   - name: review
     persona: custom-reviewer
+    policy: [design, coding]
     edit: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep, Bash]
+    allowed_tools: [Read, Glob, Grep, Bash]
     output_contracts:
       report:
         - name: 00-review.md
-    instruction: |
+    instruction_template: |
       コードレビューを実施してください。
       1. git diff で実装差分を確認する（差分がない場合は git show HEAD でコミット内容を確認）
       2. 関連ファイルを読み込み、変更の文脈を理解する
@@ -34,14 +43,13 @@ movements:
     parallel:
       - name: claude-meta-review
         persona: custom-reviewer
+        policy: [design, coding]
         edit: false
-        provider_options:
-          claude:
-            allowed_tools: [Read, Glob, Grep]
+        allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 01-claude-meta-review.md
-        instruction: |
+        instruction_template: |
           レビュー結果の妥当性を検証してください。
           過剰な指摘や見落としがないか確認してください。
           {previous_response}
@@ -50,15 +58,14 @@ movements:
           - condition: needs_fix
       - name: codex-meta-review
         persona: custom-reviewer
+        policy: [design, coding]
         provider: codex
         edit: false
-        provider_options:
-          codex:
-            allowed_tools: [Read, Glob, Grep]
+        allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 02-codex-meta-review.md
-        instruction: |
+        instruction_template: |
           レビュー結果の妥当性を検証してください。
           指摘の優先度と実用性を評価してください。
           {previous_response}
@@ -73,16 +80,15 @@ movements:
 
   - name: fix-review
     persona: custom-reviewer
+    policy: [design, coding]
     edit: false
     session: refresh
     pass_previous_response: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep]
+    allowed_tools: [Read, Glob, Grep]
     output_contracts:
       report:
         - name: 00-review.md
-    instruction: |
+    instruction_template: |
       クロスレビューの指摘を基にレビュー内容を改善してください。
       コード修正は行わず、レビューレポートの改善のみ行ってください。
       レポートディレクトリ {report_dir} を参照してください。
@@ -94,17 +100,17 @@ movements:
 
   - name: supervise
     persona: custom-supervisor
+    policy: validation
+    knowledge: tier-assessment
     edit: false
     session: refresh
     pass_previous_response: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep]
+    allowed_tools: [Read, Glob, Grep]
     output_contracts:
       report:
         - name: 03-validation.md
         - name: 04-summary.md
-    instruction: |
+    instruction_template: |
       レビュー結果の最終検証を行ってください。
       レポートディレクトリ {report_dir} を参照してください。
     rules:
@@ -120,7 +126,7 @@ loop_monitors:
     threshold: 3
     judge:
       persona: custom-supervisor
-      instruction: |
+      instruction_template: |
         レビュー改善サイクルが {iteration} 回繰り返されています。
         進捗があるか判断してください。
       rules:

@@ -8,17 +8,28 @@ piece_config:
     codex:
       network_access: true
 
+personas:
+  custom-ci-analyzer: ../facets/personas/custom-ci-analyzer.md
+  custom-coder: ../facets/personas/custom-coder.md
+  custom-reviewer: ../facets/personas/custom-reviewer.md
+  custom-supervisor: ../facets/personas/custom-supervisor.md
+policies:
+  design: ../facets/policies/design.md
+  coding: ../facets/policies/coding.md
+  validation: ../facets/policies/validation.md
+knowledge:
+  tdd: ../facets/knowledge/tdd.md
+  tier-assessment: ../facets/knowledge/tier-assessment.md
+
 movements:
   - name: analyze-ci
     persona: custom-ci-analyzer
     edit: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep, Bash]
+    allowed_tools: [Read, Glob, Grep, Bash]
     output_contracts:
       report:
         - name: 00-ci-analysis.md
-    instruction: |
+    instruction_template: |
       CI の失敗を分析してください。
       1. gh pr view でPRの概要を確認する
       2. gh pr checks でCI結果を確認する
@@ -33,18 +44,18 @@ movements:
 
   - name: fix
     persona: custom-coder
+    policy: [design, coding]
+    knowledge: tdd
     edit: true
     required_permission_mode: edit
     session: refresh
     pass_previous_response: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
+    allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
     output_contracts:
       report:
         - name: 01-scope.md
         - name: 02-decisions.md
-    instruction: |
+    instruction_template: |
       CI分析結果に基づいてコードを修正してください。
       1. レポートディレクトリ {report_dir} 内の分析結果を参照する
       2. 失敗原因に対する修正を TDD で実施する
@@ -59,14 +70,13 @@ movements:
     parallel:
       - name: claude-review
         persona: custom-reviewer
+        policy: [design, coding]
         edit: false
-        provider_options:
-          claude:
-            allowed_tools: [Read, Glob, Grep]
+        allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 03-claude-review.md
-        instruction: |
+        instruction_template: |
           CI修正の差分をレビューしてください。
           CI分析結果と修正内容の整合性を確認してください。
           {previous_response}
@@ -75,15 +85,14 @@ movements:
           - condition: needs_fix
       - name: codex-review
         persona: custom-reviewer
+        policy: [design, coding]
         provider: codex
         edit: false
-        provider_options:
-          codex:
-            allowed_tools: [Read, Glob, Grep]
+        allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 04-codex-review.md
-        instruction: |
+        instruction_template: |
           CI修正の差分をレビューしてください。
           修正がCI失敗の根本原因に対処しているか確認してください。
           {previous_response}
@@ -98,18 +107,18 @@ movements:
 
   - name: fix-again
     persona: custom-coder
+    policy: [design, coding]
+    knowledge: tdd
     edit: true
     required_permission_mode: edit
     session: refresh
     pass_previous_response: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
+    allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
     output_contracts:
       report:
         - name: 01-scope.md
         - name: 02-decisions.md
-    instruction: |
+    instruction_template: |
       クロスレビューの指摘を検討し、妥当な指摘に対して修正してください。
       レポートディレクトリ {report_dir} 内のレビュー結果を参照してください。
       修正後はテストが通ることを確認してください。
@@ -121,18 +130,18 @@ movements:
 
   - name: supervise
     persona: custom-supervisor
+    policy: validation
+    knowledge: tier-assessment
     edit: true
     required_permission_mode: edit
     session: refresh
     pass_previous_response: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep, Bash]
+    allowed_tools: [Read, Glob, Grep, Bash]
     output_contracts:
       report:
         - name: 05-validation.md
         - name: 06-summary.md
-    instruction: |
+    instruction_template: |
       CI修正の最終検証を行ってください。
       1. gh pr checks で修正対象のCI項目が解消される見込みか確認する
       2. 全テストが通ることを確認
@@ -152,7 +161,7 @@ loop_monitors:
     threshold: 3
     judge:
       persona: custom-supervisor
-      instruction: |
+      instruction_template: |
         修正サイクルが {iteration} 回繰り返されています。
         進捗があるか判断してください。
       rules:

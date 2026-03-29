@@ -8,20 +8,31 @@ piece_config:
     codex:
       network_access: true
 
+personas:
+  custom-coder: ../facets/personas/custom-coder.md
+  custom-reviewer: ../facets/personas/custom-reviewer.md
+  custom-supervisor: ../facets/personas/custom-supervisor.md
+policies:
+  design: ../facets/policies/design.md
+  coding: ../facets/policies/coding.md
+  validation: ../facets/policies/validation.md
+knowledge:
+  tdd: ../facets/knowledge/tdd.md
+  tier-assessment: ../facets/knowledge/tier-assessment.md
 
 movements:
   - name: fix
     persona: custom-coder
+    policy: [design, coding]
+    knowledge: tdd
     edit: true
     required_permission_mode: edit
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash, WebSearch, WebFetch]
+    allowed_tools: [Read, Glob, Grep, Edit, Write, Bash, WebSearch, WebFetch]
     output_contracts:
       report:
         - name: 00-scope.md
         - name: 01-decisions.md
-    instruction: |
+    instruction_template: |
       レビュー指摘に基づいてコードを修正してください。
       1. レビューファイルの指摘内容を確認する
       2. 妥当な指摘に対して TDD で修正する
@@ -37,14 +48,13 @@ movements:
     parallel:
       - name: claude-review
         persona: custom-reviewer
+        policy: [design, coding]
         edit: false
-        provider_options:
-          claude:
-            allowed_tools: [Read, Glob, Grep]
+        allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 02-claude-review.md
-        instruction: |
+        instruction_template: |
           修正差分をレビューしてください。
           観点: レビュー指摘への対応の妥当性、変更容易性
           {previous_response}
@@ -53,15 +63,14 @@ movements:
           - condition: needs_fix
       - name: codex-review
         persona: custom-reviewer
+        policy: [design, coding]
         provider: codex
         edit: false
-        provider_options:
-          codex:
-            allowed_tools: [Read, Glob, Grep]
+        allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 03-codex-review.md
-        instruction: |
+        instruction_template: |
           修正差分をレビューしてください。
           観点: セキュリティ、パフォーマンス、エッジケース
           {previous_response}
@@ -76,18 +85,18 @@ movements:
 
   - name: fix-again
     persona: custom-coder
+    policy: [design, coding]
+    knowledge: tdd
     edit: true
     required_permission_mode: edit
     session: refresh
     pass_previous_response: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
+    allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
     output_contracts:
       report:
         - name: 00-scope.md
         - name: 01-decisions.md
-    instruction: |
+    instruction_template: |
       クロスレビューの指摘を検討し、妥当な指摘に対して修正してください。
       レポートディレクトリ {report_dir} 内のレビュー結果を参照してください。
       修正後はテストが通ることを確認してください。
@@ -99,18 +108,18 @@ movements:
 
   - name: supervise
     persona: custom-supervisor
+    policy: validation
+    knowledge: tier-assessment
     edit: true
     required_permission_mode: edit
     session: refresh
     pass_previous_response: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep, Bash]
+    allowed_tools: [Read, Glob, Grep, Bash]
     output_contracts:
       report:
         - name: 04-validation.md
         - name: 05-summary.md
-    instruction: |
+    instruction_template: |
       修正の最終検証を行ってください。
       1. 全テストが通ることを確認
       2. Linter/Formatter を実行
@@ -129,7 +138,7 @@ loop_monitors:
     threshold: 3
     judge:
       persona: custom-supervisor
-      instruction: |
+      instruction_template: |
         修正サイクルが {iteration} 回繰り返されています。
         進捗があるか判断してください。
       rules:

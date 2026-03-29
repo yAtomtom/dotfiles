@@ -8,18 +8,28 @@ piece_config:
     codex:
       network_access: true
 
+personas:
+  custom-planner: ../facets/personas/custom-planner.md
+  custom-reviewer: ../facets/personas/custom-reviewer.md
+  custom-supervisor: ../facets/personas/custom-supervisor.md
+policies:
+  design: ../facets/policies/design.md
+  coding: ../facets/policies/coding.md
+  validation: ../facets/policies/validation.md
+knowledge:
+  tier-assessment: ../facets/knowledge/tier-assessment.md
+
 movements:
   - name: design
     persona: custom-planner
+    policy: design
     edit: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep, WebSearch, WebFetch]
+    allowed_tools: [Read, Glob, Grep, WebSearch, WebFetch]
     output_contracts:
       report:
         - name: 00-plan.md
           format: plan
-    instruction: |
+    instruction_template: |
       以下のタスクについて設計を行ってください。
       1. プロジェクトの関連ファイルを読み込み、現状の設計を把握する
       2. 設計方針に基づいて設計案を作成する
@@ -35,14 +45,13 @@ movements:
     parallel:
       - name: claude-review
         persona: custom-reviewer
+        policy: [design, coding]
         edit: false
-        provider_options:
-          claude:
-            allowed_tools: [Read, Glob, Grep]
+        allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 01-claude-review.md
-        instruction: |
+        instruction_template: |
           設計案をレビューしてください。
           観点: アーキテクチャ、変更容易性、DDD整合性
           {previous_response}
@@ -51,15 +60,14 @@ movements:
           - condition: needs_fix
       - name: codex-review
         persona: custom-reviewer
+        policy: [design, coding]
         provider: codex
         edit: false
-        provider_options:
-          codex:
-            allowed_tools: [Read, Glob, Grep]
+        allowed_tools: [Read, Glob, Grep]
         output_contracts:
           report:
             - name: 02-codex-review.md
-        instruction: |
+        instruction_template: |
           設計案をレビューしてください。
           観点: 実装可能性、セキュリティ、パフォーマンス
           {previous_response}
@@ -74,17 +82,16 @@ movements:
 
   - name: fix
     persona: custom-planner
+    policy: design
     edit: false
     session: refresh
     pass_previous_response: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep]
+    allowed_tools: [Read, Glob, Grep]
     output_contracts:
       report:
         - name: 00-plan.md
           format: plan
-    instruction: |
+    instruction_template: |
       クロスレビューの指摘を検討し、妥当な指摘に対して設計案を改善してください。
       レポートディレクトリ {report_dir} 内のレビュー結果を参照してください。
     rules:
@@ -95,17 +102,17 @@ movements:
 
   - name: supervise
     persona: custom-supervisor
+    policy: validation
+    knowledge: tier-assessment
     edit: false
     session: refresh
     pass_previous_response: false
-    provider_options:
-      claude:
-        allowed_tools: [Read, Glob, Grep]
+    allowed_tools: [Read, Glob, Grep]
     output_contracts:
       report:
         - name: 03-validation.md
         - name: 04-summary.md
-    instruction: |
+    instruction_template: |
       設計の最終検証を行ってください。
       レポートディレクトリ {report_dir} 内の設計案とレビュー結果を確認してください。
     rules:
@@ -121,7 +128,7 @@ loop_monitors:
     threshold: 3
     judge:
       persona: custom-supervisor
-      instruction: |
+      instruction_template: |
         cross-review と fix のサイクルが {iteration} 回繰り返されています。
         進捗があるか、同じ指摘が繰り返されているか判断してください。
       rules:
