@@ -130,7 +130,7 @@ loop_monitors:
         cross-review と fix のサイクルが {iteration} 回繰り返されています。
         進捗があるか、同じ指摘が繰り返されているか判断してください。
       rules:
-        - condition: 進捗あり、継続
+        - condition: 進捗あり
           next: cross-review
-        - condition: 非生産的、supervisor に委ねる
+        - condition: 非生産的
           next: supervise
