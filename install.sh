@@ -98,6 +98,7 @@ SYMLINK_FILES=(
   ".zshrc_patches"
   ".config/zeno/config.yml"
   ".config/cage/presets.yml"
+  ".takt/config.yaml"
   ".takt/workflows/plan.yaml"
   ".takt/workflows/implement.yaml"
   ".takt/workflows/review-code.yaml"

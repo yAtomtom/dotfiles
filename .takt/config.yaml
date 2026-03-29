@@ -1,0 +1,4 @@
+language: ja
+provider: claude
+default_workflow: default
+log_level: info
