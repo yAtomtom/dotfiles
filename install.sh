@@ -39,6 +39,7 @@ SYMLINK_FILES=(
   ".claude/hooks/posttooluse-commit-verify.sh"
   ".claude/hooks/posttooluse-exitplan-guard.sh"
   ".claude/hooks/pretooluse-plan-lock.sh"
+  ".claude/hooks/stop-notify.sh"
   ".claude/skills/agent-memory/SKILL.md"
   ".claude/skills/anti-human-bottleneck/SKILL.md"
   ".claude/skills/pr/SKILL.md"

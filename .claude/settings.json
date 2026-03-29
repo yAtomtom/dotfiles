@@ -245,6 +245,16 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/stop-notify.sh"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
