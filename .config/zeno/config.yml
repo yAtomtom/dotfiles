@@ -40,6 +40,10 @@ snippets:
     keyword: tkrcm
     snippet: takt -w review-comments
 
+  - name: takt plan-implement
+    keyword: tkpi
+    snippet: takt -w plan-implement
+
   - name: takt fix-ci
     keyword: tkfci
     snippet: takt -w fix-ci

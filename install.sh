@@ -105,6 +105,7 @@ SYMLINK_FILES=(
   ".takt/pieces/review-pr.yaml"
   ".takt/pieces/review-comments.yaml"
   ".takt/pieces/fix-ci.yaml"
+  ".takt/pieces/plan-implement.yaml"
   ".takt/facets/policies/design.md"
   ".takt/facets/policies/coding.md"
   ".takt/facets/policies/validation.md"

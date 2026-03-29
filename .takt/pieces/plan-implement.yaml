@@ -1,0 +1,293 @@
+name: plan-implement
+description: 設計から TDD 実装までの一気通貫ワークフロー
+max_movements: 30
+initial_movement: design
+
+piece_config:
+  provider_options:
+    copilot:
+      network_access: true
+
+personas:
+  custom-planner: ../facets/personas/custom-planner.md
+  custom-coder: ../facets/personas/custom-coder.md
+  custom-reviewer: ../facets/personas/custom-reviewer.md
+  custom-supervisor: ../facets/personas/custom-supervisor.md
+policies:
+  design: ../facets/policies/design.md
+  coding: ../facets/policies/coding.md
+  validation: ../facets/policies/validation.md
+knowledge:
+  tdd: ../facets/knowledge/tdd.md
+  tier-assessment: ../facets/knowledge/tier-assessment.md
+
+movements:
+  # === Plan phase ===
+  - name: design
+    persona: custom-planner
+    policy: design
+    edit: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, WebSearch, WebFetch]
+    output_contracts:
+      report:
+        - name: 00-plan.md
+          format: plan
+    instruction: |
+      以下のタスクについて設計を行ってください。
+      1. プロジェクトの関連ファイルを読み込み、現状の設計を把握する
+      2. 設計方針に基づいて設計案を作成する
+      3. 設計案をレポートファイルに出力する
+      Task: {task}
+    rules:
+      - condition: 設計案が作成された
+        next: review-design
+      - condition: 要件が不明確で設計できない
+        next: ABORT
+
+  - name: review-design
+    parallel:
+      - name: claude-review-design
+        persona: custom-reviewer
+        policy: [design, coding]
+        edit: false
+        provider_options:
+          claude:
+            allowed_tools: [Read, Glob, Grep]
+        output_contracts:
+          report:
+            - name: 01-plan-review-claude.md
+              format: ai-review
+        instruction: |
+          設計案をレビューしてください。
+          観点: アーキテクチャ、変更容易性、DDD整合性
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+      - name: copilot-review-design
+        persona: custom-reviewer
+        policy: [design, coding]
+        provider: copilot
+        model: gpt-5.3-codex
+        edit: false
+        output_contracts:
+          report:
+            - name: 02-plan-review-copilot.md
+              format: ai-review
+        instruction: |
+          設計案をレビューしてください。
+          観点: 実装可能性、セキュリティ、パフォーマンス
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+    rules:
+      - condition: all("approved")
+        next: approve-design
+      - condition: any("needs_fix")
+        next: fix-design
+
+  - name: fix-design
+    persona: custom-planner
+    policy: design
+    edit: false
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep]
+    output_contracts:
+      report:
+        - name: 00-plan.md
+          format: plan
+    instruction: |
+      クロスレビューの指摘を検討し、妥当な指摘に対して設計案を改善してください。
+      レポートディレクトリ {report_dir} 内のレビュー結果を参照してください。
+    rules:
+      - condition: 修正完了
+        next: review-design
+      - condition: 指摘は設計意図通りで修正不要
+        next: approve-design
+
+  - name: approve-design
+    persona: custom-supervisor
+    policy: validation
+    knowledge: tier-assessment
+    edit: false
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep]
+    output_contracts:
+      report:
+        - name: 03-plan-validation.md
+          format: supervisor-validation
+    instruction: |
+      設計の最終検証を行ってください。
+      レポートディレクトリ {report_dir} 内の設計案とレビュー結果を確認してください。
+    rules:
+      - condition: 承認
+        next: implement
+      - condition: 差し戻し
+        next: design
+
+  # === Implement phase ===
+  - name: implement
+    persona: custom-coder
+    policy: [design, coding]
+    knowledge: tdd
+    edit: true
+    required_permission_mode: edit
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash, WebSearch, WebFetch]
+    output_contracts:
+      report:
+        - name: 10-impl-scope.md
+          format: coder-scope
+        - name: 11-impl-decisions.md
+          format: coder-decisions
+    instruction: |
+      設計案に基づいて TDD で実装してください。
+      1. レポートディレクトリ {report_dir} 内の設計案（00-plan.md）を参照する
+      2. テストを先に書く（Red）
+      3. テストを通す最小限の実装（Green）
+      4. リファクタリング（Refactor）
+      Task: {task}
+    rules:
+      - condition: 実装完了、全テストパス
+        next: review-impl
+      - condition: 実装方針に不明点がある
+        next: ABORT
+
+  - name: review-impl
+    parallel:
+      - name: claude-review-impl
+        persona: custom-reviewer
+        policy: [design, coding]
+        edit: false
+        provider_options:
+          claude:
+            allowed_tools: [Read, Glob, Grep]
+        output_contracts:
+          report:
+            - name: 12-impl-review-claude.md
+              format: ai-review
+        instruction: |
+          実装差分をレビューしてください。
+          観点: 設計整合性、変更容易性、テスト網羅性
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+      - name: copilot-review-impl
+        persona: custom-reviewer
+        policy: [design, coding]
+        provider: copilot
+        model: gpt-5.3-codex
+        edit: false
+        output_contracts:
+          report:
+            - name: 13-impl-review-copilot.md
+              format: ai-review
+        instruction: |
+          実装差分をレビューしてください。
+          観点: セキュリティ、パフォーマンス、エッジケース
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+    rules:
+      - condition: all("approved")
+        next: supervise
+      - condition: any("needs_fix")
+        next: fix-impl
+
+  - name: fix-impl
+    persona: custom-coder
+    policy: [design, coding]
+    knowledge: tdd
+    edit: true
+    required_permission_mode: edit
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
+    output_contracts:
+      report:
+        - name: 10-impl-scope.md
+          format: coder-scope
+        - name: 11-impl-decisions.md
+          format: coder-decisions
+    instruction: |
+      クロスレビューの指摘を検討し、妥当な指摘に対して修正してください。
+      レポートディレクトリ {report_dir} 内のレビュー結果を参照してください。
+      修正後はテストが通ることを確認してください。
+    rules:
+      - condition: 修正完了、全テストパス
+        next: review-impl
+      - condition: 指摘は実装意図通りで修正不要
+        next: supervise
+
+  - name: supervise
+    persona: custom-supervisor
+    policy: validation
+    knowledge: tier-assessment
+    edit: true
+    required_permission_mode: edit
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash]
+    output_contracts:
+      report:
+        - name: 14-impl-validation.md
+          format: supervisor-validation
+        - name: 15-summary.md
+          format: summary
+    instruction: |
+      実装の最終検証を行ってください。
+      1. 全テストが通ることを確認（テスト実行）
+      2. Linter/Formatter を実行
+      3. 承認する場合は適切な粒度で git add && git commit
+      レポートディレクトリ {report_dir} を参照してください。
+    rules:
+      - condition: 承認・コミット完了
+        next: COMPLETE
+      - condition: 差し戻し
+        next: implement
+
+loop_monitors:
+  - cycle:
+      - review-design
+      - fix-design
+    threshold: 3
+    judge:
+      persona: custom-supervisor
+      instruction: |
+        review-design と fix-design のサイクルが {iteration} 回繰り返されています。
+        進捗があるか、同じ指摘が繰り返されているか判断してください。
+      rules:
+        - condition: 進捗あり
+          next: review-design
+        - condition: 非生産的
+          next: approve-design
+  - cycle:
+      - review-impl
+      - fix-impl
+    threshold: 3
+    judge:
+      persona: custom-supervisor
+      instruction: |
+        review-impl と fix-impl のサイクルが {iteration} 回繰り返されています。
+        進捗があるか判断してください。
+      rules:
+        - condition: 進捗あり
+          next: review-impl
+        - condition: 非生産的
+          next: supervise

@@ -138,7 +138,8 @@ takt（TAKT Agent Koordination Topology）のカスタムピース（ワーク�
 │   ├── fix-code.yaml                # レビュー指摘に基づくコード修正
 │   ├── review-pr.yaml               # GitHub PR の差分レビュー
 │   ├── review-comments.yaml         # GitHub PR のコメント議論分析
-│   └── fix-ci.yaml                  # CI 失敗の分析と修正
+│   ├── fix-ci.yaml                  # CI 失敗の分析と修正
+│   └── plan-implement.yaml          # 設計→TDD実装の一気通貫
 ├── facets/
 │   ├── personas/                    # ペルソナ（WHO: 役割・境界・ワークフロー）
 │   │   ├── custom-planner.md
@@ -202,6 +203,7 @@ takt -w plan -c
 | `tkfc` | `takt -w fix-code` | レビュー指摘修正 |
 | `tkrp` | `takt -w review-pr` | PRレビュー |
 | `tkrcm` | `takt -w review-comments` | PRコメント分析 |
+| `tkpi` | `takt -w plan-implement` | 設計→実装一気通貫 |
 | `tkfci` | `takt -w fix-ci` | CI修正 |
 
 展開後に `-t "タスク"` や `--provider mock` 等を追記可能。
@@ -210,8 +212,8 @@ takt -w plan -c
 
 | モード | 適するピース | 理由 |
 |--------|------------|------|
-| アシスタント | plan | 要件の曖昧さを事前に解消 |
-| ペルソナ | plan | 設計方針を対話で擦り合わせ |
+| アシスタント | plan, plan-implement | 要件の曖昧さを事前に解消 |
+| ペルソナ | plan, plan-implement | 設計方針を対話で擦り合わせ |
 | パススルー | implement, fix-code, fix-ci | 要件が明確で対話不要 |
 | クワイエット | review-code, review-pr | 入力がコード差分で明確 |
 
