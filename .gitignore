@@ -45,3 +45,7 @@
 
 # skill-auditor reports
 .claude/skill-report/
+
+# takt auto-generated
+.takt/reports/
+.takt/logs/

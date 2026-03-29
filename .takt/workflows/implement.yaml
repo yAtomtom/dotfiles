@@ -1,0 +1,143 @@
+name: implement
+description: 設計に基づくTDD実装とクロスレビュー
+max_movements: 20
+initial_movement: implement
+
+piece_config:
+  provider_options:
+    codex:
+      network_access: true
+
+personas:
+  custom-coder: ./agents/coder.md
+  custom-reviewer: ./agents/reviewer.md
+  custom-supervisor: ./agents/supervisor.md
+
+movements:
+  - name: implement
+    persona: custom-coder
+    edit: true
+    required_permission_mode: edit
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash, WebSearch, WebFetch]
+    output_contracts:
+      report:
+        - name: 00-scope.md
+        - name: 01-decisions.md
+    instruction: |
+      以下のタスクを TDD で実装してください。
+      1. テストを先に書く（Red）
+      2. テストを通す最小限の実装（Green）
+      3. リファクタリング（Refactor）
+      Task: {task}
+    rules:
+      - condition: 実装完了、全テストパス
+        next: cross-review
+      - condition: 実装方針に不明点がある
+        next: ABORT
+
+  - name: cross-review
+    parallel:
+      - name: claude-review
+        persona: custom-reviewer
+        edit: false
+        provider_options:
+          claude:
+            allowed_tools: [Read, Glob, Grep]
+        output_contracts:
+          report:
+            - name: 02-claude-review.md
+        instruction: |
+          実装差分をレビューしてください。
+          観点: 設計整合性、変更容易性、テスト網羅性
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+      - name: codex-review
+        persona: custom-reviewer
+        provider: codex
+        edit: false
+        provider_options:
+          codex:
+            allowed_tools: [Read, Glob, Grep]
+        output_contracts:
+          report:
+            - name: 03-codex-review.md
+        instruction: |
+          実装差分をレビューしてください。
+          観点: セキュリティ、パフォーマンス、エッジケース
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+    rules:
+      - condition: all("approved")
+        next: supervise
+      - condition: any("needs_fix")
+        next: fix
+
+  - name: fix
+    persona: custom-coder
+    edit: true
+    required_permission_mode: edit
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
+    output_contracts:
+      report:
+        - name: 00-scope.md
+        - name: 01-decisions.md
+    instruction: |
+      クロスレビューの指摘を検討し、妥当な指摘に対して修正してください。
+      レポートディレクトリ {report_dir} 内のレビュー結果を参照してください。
+      修正後はテストが通ることを確認してください。
+    rules:
+      - condition: 修正完了、全テストパス
+        next: cross-review
+      - condition: 指摘は実装意図通りで修正不要
+        next: supervise
+
+  - name: supervise
+    persona: custom-supervisor
+    edit: true
+    required_permission_mode: edit
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash]
+    output_contracts:
+      report:
+        - name: 04-validation.md
+        - name: 05-summary.md
+    instruction: |
+      実装の最終検証を行ってください。
+      1. 全テストが通ることを確認（テスト実行）
+      2. Linter/Formatter を実行
+      3. 承認する場合は適切な粒度で git add && git commit
+      レポートディレクトリ {report_dir} を参照してください。
+    rules:
+      - condition: 承認・コミット完了
+        next: COMPLETE
+      - condition: 差し戻し
+        next: implement
+
+loop_monitors:
+  - cycle:
+      - cross-review
+      - fix
+    threshold: 3
+    judge:
+      persona: custom-supervisor
+      instruction: |
+        cross-review と fix のサイクルが {iteration} 回繰り返されています。
+        進捗があるか判断してください。
+      rules:
+        - condition: 進捗あり
+          next: cross-review
+        - condition: 非生産的
+          next: supervise

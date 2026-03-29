@@ -1,0 +1,168 @@
+name: fix-ci
+description: CI失敗の分析と修正
+max_movements: 20
+initial_movement: analyze-ci
+
+piece_config:
+  provider_options:
+    codex:
+      network_access: true
+
+personas:
+  custom-ci-analyzer: ./agents/ci-analyzer.md
+  custom-coder: ./agents/coder.md
+  custom-reviewer: ./agents/reviewer.md
+  custom-supervisor: ./agents/supervisor.md
+
+movements:
+  - name: analyze-ci
+    persona: custom-ci-analyzer
+    edit: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash]
+    output_contracts:
+      report:
+        - name: 00-ci-analysis.md
+    instruction: |
+      CI の失敗を分析してください。
+      1. gh pr view でPRの概要を確認する
+      2. gh pr checks でCI結果を確認する
+      3. gh run view でCI実行ログを確認する
+      4. 失敗原因を特定し、修正方針をレポートに出力する
+      Task: {task}
+    rules:
+      - condition: 分析完了、修正方針が明確
+        next: fix
+      - condition: CI情報を取得できない
+        next: ABORT
+
+  - name: fix
+    persona: custom-coder
+    edit: true
+    required_permission_mode: edit
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
+    output_contracts:
+      report:
+        - name: 01-scope.md
+        - name: 02-decisions.md
+    instruction: |
+      CI分析結果に基づいてコードを修正してください。
+      1. レポートディレクトリ {report_dir} 内の分析結果を参照する
+      2. 失敗原因に対する修正を TDD で実施する
+      3. 全テストが通ることを確認する
+    rules:
+      - condition: 修正完了、全テストパス
+        next: cross-review
+      - condition: 修正方針に不明点がある
+        next: ABORT
+
+  - name: cross-review
+    parallel:
+      - name: claude-review
+        persona: custom-reviewer
+        edit: false
+        provider_options:
+          claude:
+            allowed_tools: [Read, Glob, Grep]
+        output_contracts:
+          report:
+            - name: 03-claude-review.md
+        instruction: |
+          CI修正の差分をレビューしてください。
+          CI分析結果と修正内容の整合性を確認してください。
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+      - name: codex-review
+        persona: custom-reviewer
+        provider: codex
+        edit: false
+        provider_options:
+          codex:
+            allowed_tools: [Read, Glob, Grep]
+        output_contracts:
+          report:
+            - name: 04-codex-review.md
+        instruction: |
+          CI修正の差分をレビューしてください。
+          修正がCI失敗の根本原因に対処しているか確認してください。
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+    rules:
+      - condition: all("approved")
+        next: supervise
+      - condition: any("needs_fix")
+        next: fix-again
+
+  - name: fix-again
+    persona: custom-coder
+    edit: true
+    required_permission_mode: edit
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
+    output_contracts:
+      report:
+        - name: 01-scope.md
+        - name: 02-decisions.md
+    instruction: |
+      クロスレビューの指摘を検討し、妥当な指摘に対して修正してください。
+      レポートディレクトリ {report_dir} 内のレビュー結果を参照してください。
+      修正後はテストが通ることを確認してください。
+    rules:
+      - condition: 修正完了
+        next: cross-review
+      - condition: 修正不要
+        next: supervise
+
+  - name: supervise
+    persona: custom-supervisor
+    edit: true
+    required_permission_mode: edit
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash]
+    output_contracts:
+      report:
+        - name: 05-validation.md
+        - name: 06-summary.md
+    instruction: |
+      CI修正の最終検証を行ってください。
+      1. gh pr checks で修正対象のCI項目が解消される見込みか確認する
+      2. 全テストが通ることを確認
+      3. Linter/Formatter を実行
+      4. 承認する場合は適切な粒度で git add && git commit
+      レポートディレクトリ {report_dir} を参照してください。
+    rules:
+      - condition: 承認・コミット完了
+        next: COMPLETE
+      - condition: 差し戻し
+        next: analyze-ci
+
+loop_monitors:
+  - cycle:
+      - cross-review
+      - fix-again
+    threshold: 3
+    judge:
+      persona: custom-supervisor
+      instruction: |
+        修正サイクルが {iteration} 回繰り返されています。
+        進捗があるか判断してください。
+      rules:
+        - condition: 進捗あり
+          next: cross-review
+        - condition: 非生産的
+          next: supervise

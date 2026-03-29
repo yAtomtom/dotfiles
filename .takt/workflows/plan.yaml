@@ -1,0 +1,136 @@
+name: plan
+description: 設計方針に基づく設計案の作成とクロスレビュー
+max_movements: 15
+initial_movement: design
+
+piece_config:
+  provider_options:
+    codex:
+      network_access: true
+
+personas:
+  custom-planner: ./agents/planner.md
+  custom-reviewer: ./agents/reviewer.md
+  custom-supervisor: ./agents/supervisor.md
+
+movements:
+  - name: design
+    persona: custom-planner
+    edit: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, WebSearch, WebFetch]
+    output_contracts:
+      report:
+        - name: 00-plan.md
+          format: plan
+    instruction: |
+      以下のタスクについて設計を行ってください。
+      1. プロジェクトの関連ファイルを読み込み、現状の設計を把握する
+      2. 設計方針に基づいて設計案を作成する
+      3. 設計案をレポートファイルに出力する
+      Task: {task}
+    rules:
+      - condition: 設計案が作成された
+        next: cross-review
+      - condition: 要件が不明確で設計できない
+        next: ABORT
+
+  - name: cross-review
+    parallel:
+      - name: claude-review
+        persona: custom-reviewer
+        edit: false
+        provider_options:
+          claude:
+            allowed_tools: [Read, Glob, Grep]
+        output_contracts:
+          report:
+            - name: 01-claude-review.md
+        instruction: |
+          設計案をレビューしてください。
+          観点: アーキテクチャ、変更容易性、DDD整合性
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+      - name: codex-review
+        persona: custom-reviewer
+        provider: codex
+        edit: false
+        provider_options:
+          codex:
+            allowed_tools: [Read, Glob, Grep]
+        output_contracts:
+          report:
+            - name: 02-codex-review.md
+        instruction: |
+          設計案をレビューしてください。
+          観点: 実装可能性、セキュリティ、パフォーマンス
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+    rules:
+      - condition: all("approved")
+        next: supervise
+      - condition: any("needs_fix")
+        next: fix
+
+  - name: fix
+    persona: custom-planner
+    edit: false
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep]
+    output_contracts:
+      report:
+        - name: 00-plan.md
+          format: plan
+    instruction: |
+      クロスレビューの指摘を検討し、妥当な指摘に対して設計案を改善してください。
+      レポートディレクトリ {report_dir} 内のレビュー結果を参照してください。
+    rules:
+      - condition: 修正完了
+        next: cross-review
+      - condition: 指摘は設計意図通りで修正不要
+        next: supervise
+
+  - name: supervise
+    persona: custom-supervisor
+    edit: false
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep]
+    output_contracts:
+      report:
+        - name: 03-validation.md
+        - name: 04-summary.md
+    instruction: |
+      設計の最終検証を行ってください。
+      レポートディレクトリ {report_dir} 内の設計案とレビュー結果を確認してください。
+    rules:
+      - condition: 承認
+        next: COMPLETE
+      - condition: 差し戻し
+        next: design
+
+loop_monitors:
+  - cycle:
+      - cross-review
+      - fix
+    threshold: 3
+    judge:
+      persona: custom-supervisor
+      instruction: |
+        cross-review と fix のサイクルが {iteration} 回繰り返されています。
+        進捗があるか、同じ指摘が繰り返されているか判断してください。
+      rules:
+        - condition: 進捗あり、継続
+          next: cross-review
+        - condition: 非生産的、supervisor に委ねる
+          next: supervise

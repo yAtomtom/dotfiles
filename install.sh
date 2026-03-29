@@ -98,6 +98,18 @@ SYMLINK_FILES=(
   ".zshrc_patches"
   ".config/zeno/config.yml"
   ".config/cage/presets.yml"
+  ".takt/workflows/plan.yaml"
+  ".takt/workflows/implement.yaml"
+  ".takt/workflows/review-code.yaml"
+  ".takt/workflows/fix-code.yaml"
+  ".takt/workflows/review-pr.yaml"
+  ".takt/workflows/review-comments.yaml"
+  ".takt/workflows/fix-ci.yaml"
+  ".takt/agents/planner.md"
+  ".takt/agents/coder.md"
+  ".takt/agents/reviewer.md"
+  ".takt/agents/supervisor.md"
+  ".takt/agents/ci-analyzer.md"
 )
 
 # template 対象

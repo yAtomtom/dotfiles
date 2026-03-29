@@ -1,0 +1,134 @@
+name: review-comments
+description: GitHub PR のコメント議論分析
+max_movements: 10
+initial_movement: review-comments
+
+piece_config:
+  provider_options:
+    codex:
+      network_access: true
+
+personas:
+  custom-reviewer: ./agents/reviewer.md
+  custom-supervisor: ./agents/supervisor.md
+
+movements:
+  - name: review-comments
+    persona: custom-reviewer
+    edit: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash]
+    output_contracts:
+      report:
+        - name: 00-comments-review.md
+    instruction: |
+      GitHub PR のコメント議論を分析してください。
+      1. gh pr view でPRの概要を確認する
+      2. gh pr diff でPRの変更差分を確認する
+      3. gh api repos/{owner}/{repo}/pulls/{number}/comments でコメントを取得する
+      4. コメントの議論内容を分析し、レビュー結果をレポートに出力する
+      Task: {task}
+    rules:
+      - condition: 分析完了
+        next: cross-review
+      - condition: PR が見つからない
+        next: ABORT
+
+  - name: cross-review
+    parallel:
+      - name: claude-meta-review
+        persona: custom-reviewer
+        edit: false
+        provider_options:
+          claude:
+            allowed_tools: [Read, Glob, Grep]
+        output_contracts:
+          report:
+            - name: 01-claude-meta-review.md
+        instruction: |
+          コメント分析結果の妥当性を検証してください。
+          分析の偏りや見落としがないか確認してください。
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+      - name: codex-meta-review
+        persona: custom-reviewer
+        provider: codex
+        edit: false
+        provider_options:
+          codex:
+            allowed_tools: [Read, Glob, Grep]
+        output_contracts:
+          report:
+            - name: 02-codex-meta-review.md
+        instruction: |
+          コメント分析結果の妥当性を検証してください。
+          分析の優先度と実用性を評価してください。
+          {previous_response}
+        rules:
+          - condition: approved
+          - condition: needs_fix
+    rules:
+      - condition: all("approved")
+        next: supervise
+      - condition: any("needs_fix")
+        next: fix-review
+
+  - name: fix-review
+    persona: custom-reviewer
+    edit: false
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep]
+    output_contracts:
+      report:
+        - name: 00-comments-review.md
+    instruction: |
+      クロスレビューの指摘を基に分析内容を改善してください。
+      レポートディレクトリ {report_dir} を参照してください。
+    rules:
+      - condition: 改善完了
+        next: cross-review
+      - condition: 改善不要
+        next: supervise
+
+  - name: supervise
+    persona: custom-supervisor
+    edit: false
+    session: refresh
+    pass_previous_response: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep]
+    output_contracts:
+      report:
+        - name: 03-validation.md
+        - name: 04-summary.md
+    instruction: |
+      分析結果の最終検証を行ってください。
+      レポートディレクトリ {report_dir} を参照してください。
+    rules:
+      - condition: 承認
+        next: COMPLETE
+      - condition: 差し戻し
+        next: review-comments
+
+loop_monitors:
+  - cycle:
+      - cross-review
+      - fix-review
+    threshold: 3
+    judge:
+      persona: custom-supervisor
+      instruction: |
+        分析改善サイクルが {iteration} 回繰り返されています。
+        進捗があるか判断してください。
+      rules:
+        - condition: 進捗あり
+          next: cross-review
+        - condition: 非生産的
+          next: supervise
