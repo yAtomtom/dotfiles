@@ -97,6 +97,7 @@ SYMLINK_FILES=(
   ".zshrc_zeno"
   ".zshrc_ai"
   ".zshrc_patches"
+  ".zshrc_envmanagers"
   ".config/zeno/config.yml"
   ".config/cage/presets.yml"
   ".takt/pieces/plan.yaml"

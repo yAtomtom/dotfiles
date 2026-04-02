@@ -1,0 +1,35 @@
+# .zshrc_envmanagers — env manager の高速初期化
+# eval "$(xxxenv init ...)" を分解し、起動時の rehash を排除する
+# xxxenv コマンド自体の呼び出しは wrapper 関数で遅延ロードする
+
+# --- pyenv ---
+export PATH="$HOME/.pyenv/shims:${PATH}"
+
+# --- rbenv ---
+export PATH="$HOME/.rbenv/shims:$HOME/.rbenv/bin:${PATH}"
+export RBENV_SHELL=zsh
+
+# --- goenv ---
+export GOENV_ROOT="$HOME/.goenv"
+export PATH="$HOME/.goenv/shims:$GOENV_ROOT/bin:${PATH}"
+export GOENV_SHELL=zsh
+
+# GOROOT/GOPATH を静的設定（goenv rehash --only-manage-paths の代替）
+# goenv init - も global version から設定するため動作は同等
+_goenv_ver=$(cat "$GOENV_ROOT/version" 2>/dev/null)
+if [[ -n "$_goenv_ver" && "$_goenv_ver" != "system" && -d "$GOENV_ROOT/versions/$_goenv_ver" ]]; then
+  export GOROOT="$GOENV_ROOT/versions/$_goenv_ver"
+  export GOPATH="$HOME/go/$_goenv_ver"
+fi
+unset _goenv_ver
+
+# go コマンドラッパー
+# command go で shim 経由を維持し .go-version のローカル切替を保持する
+unalias go 2>/dev/null
+function go { GO_BUILD_TAGS_NOAVX2=1 command go "$@"; }
+
+# --- シェル関数の遅延ロード ---
+# pyenv/rbenv/goenv コマンド自体を呼んだ時のみ full init を実行
+pyenv() { unfunction pyenv; eval "$(command pyenv init -)"; pyenv "$@" }
+rbenv() { unfunction rbenv; eval "$(command rbenv init -)"; rbenv "$@" }
+goenv() { unfunction goenv; eval "$(command goenv init -)"; goenv "$@" }
