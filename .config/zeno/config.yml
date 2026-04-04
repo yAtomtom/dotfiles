@@ -47,3 +47,7 @@ snippets:
   - name: takt fix-ci
     keyword: tkfci
     snippet: takt -w fix-ci
+
+  - name: yazi
+    keyword: yz
+    snippet: yazi
