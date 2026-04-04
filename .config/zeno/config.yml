@@ -48,6 +48,10 @@ snippets:
     keyword: tkfci
     snippet: takt -w fix-ci
 
+  - name: cmux markdown
+    keyword: cmmd
+    snippet: cmux markdown
+
   - name: yazi
     keyword: yz
     snippet: yazi
