@@ -1,9 +1,9 @@
-name: review-pr
-description: GitHub PR の差分レビュー
-max_movements: 10
-initial_movement: review-pr
+name: review-code
+description: 実装差分のコードレビューとクロスレビュー
+max_steps: 10
+initial_step: review
 
-piece_config:
+workflow_config:
   provider_options:
     copilot:
       network_access: true
@@ -18,8 +18,8 @@ policies:
 knowledge:
   tier-assessment: ../facets/knowledge/tier-assessment.md
 
-movements:
-  - name: review-pr
+steps:
+  - name: review
     persona: custom-reviewer
     policy: [design, coding]
     edit: false
@@ -28,19 +28,18 @@ movements:
         allowed_tools: [Read, Glob, Grep, Bash]
     output_contracts:
       report:
-        - name: 00-pr-review.md
+        - name: 00-review.md
           format: ai-review
     instruction: |
-      GitHub PR をレビューしてください。
-      1. gh pr view でPRの概要を確認する
-      2. gh pr diff でPRの変更差分を確認する
-      3. 関連ファイルを読み込み、変更の文脈を理解する
-      4. レビュー結果をレポートに出力する
+      コードレビューを実施してください。
+      1. git diff で実装差分を確認する（差分がない場合は git show HEAD でコミット内容を確認）
+      2. 関連ファイルを読み込み、変更の文脈を理解する
+      3. レビュー方針に基づいてレビュー結果をレポートに出力する
       Task: {task}
     rules:
       - condition: レビュー完了
         next: cross-review
-      - condition: PR が見つからない
+      - condition: レビュー対象が存在しない
         next: ABORT
 
   - name: cross-review
@@ -97,13 +96,14 @@ movements:
         allowed_tools: [Read, Glob, Grep]
     output_contracts:
       report:
-        - name: 00-pr-review.md
+        - name: 00-review.md
           format: ai-review
     instruction: |
       クロスレビューの指摘を基にレビュー内容を改善してください。
+      コード修正は行わず、レビューレポートの改善のみ行ってください。
       レポートディレクトリ {report_dir} を参照してください。
     rules:
-      - condition: 改善完了
+      - condition: レビュー改善完了
         next: cross-review
       - condition: 改善不要
         next: supervise
@@ -131,7 +131,7 @@ movements:
       - condition: 承認
         next: COMPLETE
       - condition: 差し戻し
-        next: review-pr
+        next: review
 
 loop_monitors:
   - cycle:
@@ -141,7 +141,12 @@ loop_monitors:
     judge:
       persona: custom-supervisor
       instruction: |
-        レビュー改善サイクルが {iteration} 回繰り返されています。
+        レビュー改善サイクルが {cycle_count} 回繰り返されています。
+
+        **参照するレポート:**
+        - Claude メタレビュー: {report:01-claude-meta-review.md}
+        - Copilot メタレビュー: {report:02-copilot-meta-review.md}
+
         進捗があるか判断してください。
       rules:
         - condition: 進捗あり

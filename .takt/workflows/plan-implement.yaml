@@ -1,9 +1,9 @@
 name: plan-implement
 description: 設計から TDD 実装までの一気通貫ワークフロー
-max_movements: 30
-initial_movement: design
+max_steps: 30
+initial_step: design
 
-piece_config:
+workflow_config:
   provider_options:
     copilot:
       network_access: true
@@ -21,7 +21,7 @@ knowledge:
   tdd: ../facets/knowledge/tdd.md
   tier-assessment: ../facets/knowledge/tier-assessment.md
 
-movements:
+steps:
   # === Plan phase ===
   - name: design
     persona: custom-planner
@@ -274,7 +274,12 @@ loop_monitors:
     judge:
       persona: custom-supervisor
       instruction: |
-        review-design と fix-design のサイクルが {iteration} 回繰り返されています。
+        review-design と fix-design のサイクルが {cycle_count} 回繰り返されています。
+
+        **参照するレポート:**
+        - Claude レビュー: {report:01-plan-review-claude.md}
+        - Copilot レビュー: {report:02-plan-review-copilot.md}
+
         進捗があるか、同じ指摘が繰り返されているか判断してください。
       rules:
         - condition: 進捗あり
@@ -288,7 +293,12 @@ loop_monitors:
     judge:
       persona: custom-supervisor
       instruction: |
-        review-impl と fix-impl のサイクルが {iteration} 回繰り返されています。
+        review-impl と fix-impl のサイクルが {cycle_count} 回繰り返されています。
+
+        **参照するレポート:**
+        - Claude レビュー: {report:12-impl-review-claude.md}
+        - Copilot レビュー: {report:13-impl-review-copilot.md}
+
         進捗があるか判断してください。
       rules:
         - condition: 進捗あり

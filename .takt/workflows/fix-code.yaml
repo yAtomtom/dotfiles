@@ -1,9 +1,9 @@
 name: fix-code
 description: レビュー指摘に基づくコード修正
-max_movements: 20
-initial_movement: fix
+max_steps: 20
+initial_step: fix
 
-piece_config:
+workflow_config:
   provider_options:
     copilot:
       network_access: true
@@ -20,7 +20,7 @@ knowledge:
   tdd: ../facets/knowledge/tdd.md
   tier-assessment: ../facets/knowledge/tier-assessment.md
 
-movements:
+steps:
   - name: fix
     persona: custom-coder
     policy: [design, coding]
@@ -155,7 +155,12 @@ loop_monitors:
     judge:
       persona: custom-supervisor
       instruction: |
-        修正サイクルが {iteration} 回繰り返されています。
+        修正サイクルが {cycle_count} 回繰り返されています。
+
+        **参照するレポート:**
+        - Claude レビュー: {report:02-claude-review.md}
+        - Copilot レビュー: {report:03-copilot-review.md}
+
         進捗があるか判断してください。
       rules:
         - condition: 進捗あり

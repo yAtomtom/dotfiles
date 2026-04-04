@@ -125,13 +125,13 @@ zeno-stop-server && zeno-start-server
 
 ### takt ワークフロー
 
-takt（TAKT Agent Koordination Topology）のカスタムピース（ワークフロー定義）とファセット（ペルソナ・ポリシー・ナレッジ）を管理する。cage サンドボックス経由で実行される（`.zshrc_takt` の `takt()` ラッパー関数）。
+takt（TAKT Agent Koordination Topology）のカスタムワークフロー定義とファセット（ペルソナ・ポリシー・ナレッジ）を管理する。cage サンドボックス経由で実行される（`.zshrc_takt` の `takt()` ラッパー関数）。
 
 #### ディレクトリ構成
 
 ```
 .takt/
-├── pieces/                          # ワークフロー定義（piece YAML）
+├── workflows/                       # ワークフロー定義（workflow YAML）
 │   ├── plan.yaml                    # 設計案の作成とクロスレビュー
 │   ├── implement.yaml               # TDD 実装とクロスレビュー
 │   ├── review-code.yaml             # コードレビューとメタレビュー
@@ -162,9 +162,9 @@ takt（TAKT Agent Koordination Topology）のカスタムピース（ワーク�
 └── tasks/                           # [.gitignore] タスクファイル
 ```
 
-#### 共通ムーブメント構成
+#### 共通ステップ構成
 
-全ピースは以下のパターンに従う:
+全ワークフローは以下のパターンに従う:
 
 ```
 主処理 → cross-review（並列: claude + copilot） → fix → supervise → COMPLETE
@@ -177,10 +177,10 @@ takt（TAKT Agent Koordination Topology）のカスタムピース（ワーク�
 #### 使い方
 
 ```bash
-# インタラクティブモード（ピース選択 → モード選択 → タスク入力）
+# インタラクティブモード（ワークフロー選択 → モード選択 → タスク入力）
 takt
 
-# ピース直接指定
+# ワークフロー直接指定
 takt -w plan -t "タスク内容"
 
 # プロンプトプレビュー（実行なし）
@@ -210,44 +210,45 @@ takt -w plan -c
 
 #### インタラクティブモードの選択指針
 
-| モード | 適するピース | 理由 |
+| モード | 適するワークフロー | 理由 |
 |--------|------------|------|
 | アシスタント | plan, plan-implement | 要件の曖昧さを事前に解消 |
 | ペルソナ | plan, plan-implement | 設計方針を対話で擦り合わせ |
 | パススルー | implement, fix-code, fix-ci | 要件が明確で対話不要 |
 | クワイエット | review-code, review-pr | 入力がコード差分で明確 |
 
-#### ピースの動作検証
+#### ワークフローの動作検証
 
 ```bash
 # 1. プロンプト組み立て確認
-takt prompt <piece>
+takt prompt <workflow>
 
 # 2. mock でフロー遷移確認（API 消費なし）
-takt -w <piece> --provider mock -t "テスト"
+takt -w <workflow> --provider mock -t "テスト"
 
-# 3. claude のみ実行（design ムーブメント確認）
+# 3. claude のみ実行（design ステップ確認）
 takt -w plan -t "具体的なタスク"
 
 # 4. copilot 起動確認（cross-review まで進める）
 # → ログに [copilot-review] が表示されれば成功
 ```
 
-#### ピース・ファセットの変更時
+#### ワークフロー・ファセットの変更時
 
-ピースとファセットは symlink 管理のため、リポジトリ内のファイル編集が即座に `~/.takt/` に反映される。
+ワークフローとファセットは symlink 管理のため、リポジトリ内のファイル編集が即座に `~/.takt/` に反映される。
 
-- **ピース YAML の変更後**: `takt prompt <piece>` でプロンプト組み立てエラーがないことを確認
-- **ファセットの変更後**: 参照元のピースすべてで `takt prompt` を確認
-- **ピースの追加**: `install.sh` の `SYMLINK_FILES` にパスを追加 → `./install.sh` 実行
-- **takt バージョンアップ後**: `TAKT_LOGGING_LEVEL=debug takt` で "Skipping invalid piece file" が出ないことを確認。スキーマ変更により既存ピースが拒否される場合がある
+- **ワークフロー YAML の変更後**: `takt prompt <workflow>` でプロンプト組み立てエラーがないことを確認
+- **ファセットの変更後**: 参照元のワークフローすべてで `takt prompt` を確認
+- **ワークフローの追加**: `install.sh` の `SYMLINK_FILES` にパスを追加 → `./install.sh` 実行
+- **takt バージョンアップ後**: `TAKT_LOGGING_LEVEL=debug takt` で "Skipping invalid workflow file" が出ないことを確認。スキーマ変更により既存ワークフローが拒否される場合がある
 
 #### スキーマ上の注意点
 
-- `allowed_tools` はムーブメント直下に書けない（`z.never()`）。`provider_options.claude.allowed_tools` に配置する
-- copilot サブムーブメントには `allowed_tools` を書かない（copilot プロバイダーのスキーマに存在しない）
+- `allowed_tools` はステップ直下に書けない（`z.never()`）。`provider_options.claude.allowed_tools` に配置する
+- copilot サブステップには `allowed_tools` を書かない（copilot プロバイダーのスキーマに存在しない）
 - `output_contracts.report` の各エントリには `format` フィールドが必須。ビルトインフォーマットは `takt catalog output-contracts` で確認
-- `instruction_template` は deprecated。`instruction` を使用する
+- `loop_monitors` の judge `instruction` には `{report:filename}` テンプレート変数でレポート参照が必須
+- v0.34.0 で terminology が変更: `movements` → `steps`, `max_movements` → `max_steps`, `initial_movement` → `initial_step`, `piece_config` → `workflow_config`（旧キーは後方互換エイリアスあり）
 
 ### faceted-prompting によるエージェント・スキル管理
 

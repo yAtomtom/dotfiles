@@ -1,9 +1,9 @@
 name: plan
 description: 設計方針に基づく設計案の作成とクロスレビュー
-max_movements: 15
-initial_movement: design
+max_steps: 15
+initial_step: design
 
-piece_config:
+workflow_config:
   provider_options:
     copilot:
       network_access: true
@@ -19,7 +19,7 @@ policies:
 knowledge:
   tier-assessment: ../facets/knowledge/tier-assessment.md
 
-movements:
+steps:
   - name: design
     persona: custom-planner
     policy: design
@@ -141,7 +141,12 @@ loop_monitors:
     judge:
       persona: custom-supervisor
       instruction: |
-        cross-review と fix のサイクルが {iteration} 回繰り返されています。
+        cross-review と fix のサイクルが {cycle_count} 回繰り返されています。
+
+        **参照するレポート:**
+        - Claude レビュー: {report:01-claude-review.md}
+        - Copilot レビュー: {report:02-copilot-review.md}
+
         進捗があるか、同じ指摘が繰り返されているか判断してください。
       rules:
         - condition: 進捗あり

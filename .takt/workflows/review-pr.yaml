@@ -1,9 +1,9 @@
-name: review-comments
-description: GitHub PR のコメント議論分析
-max_movements: 10
-initial_movement: review-comments
+name: review-pr
+description: GitHub PR の差分レビュー
+max_steps: 10
+initial_step: review-pr
 
-piece_config:
+workflow_config:
   provider_options:
     copilot:
       network_access: true
@@ -18,8 +18,8 @@ policies:
 knowledge:
   tier-assessment: ../facets/knowledge/tier-assessment.md
 
-movements:
-  - name: review-comments
+steps:
+  - name: review-pr
     persona: custom-reviewer
     policy: [design, coding]
     edit: false
@@ -28,17 +28,17 @@ movements:
         allowed_tools: [Read, Glob, Grep, Bash]
     output_contracts:
       report:
-        - name: 00-comments-review.md
+        - name: 00-pr-review.md
           format: ai-review
     instruction: |
-      GitHub PR のコメント議論を分析してください。
+      GitHub PR をレビューしてください。
       1. gh pr view でPRの概要を確認する
       2. gh pr diff でPRの変更差分を確認する
-      3. gh api repos/{owner}/{repo}/pulls/{number}/comments でコメントを取得する
-      4. コメントの議論内容を分析し、レビュー結果をレポートに出力する
+      3. 関連ファイルを読み込み、変更の文脈を理解する
+      4. レビュー結果をレポートに出力する
       Task: {task}
     rules:
-      - condition: 分析完了
+      - condition: レビュー完了
         next: cross-review
       - condition: PR が見つからない
         next: ABORT
@@ -57,8 +57,8 @@ movements:
             - name: 01-claude-meta-review.md
               format: ai-review
         instruction: |
-          コメント分析結果の妥当性を検証してください。
-          分析の偏りや見落としがないか確認してください。
+          レビュー結果の妥当性を検証してください。
+          過剰な指摘や見落としがないか確認してください。
           {previous_response}
         rules:
           - condition: approved
@@ -74,8 +74,8 @@ movements:
             - name: 02-copilot-meta-review.md
               format: ai-review
         instruction: |
-          コメント分析結果の妥当性を検証してください。
-          分析の優先度と実用性を評価してください。
+          レビュー結果の妥当性を検証してください。
+          指摘の優先度と実用性を評価してください。
           {previous_response}
         rules:
           - condition: approved
@@ -97,10 +97,10 @@ movements:
         allowed_tools: [Read, Glob, Grep]
     output_contracts:
       report:
-        - name: 00-comments-review.md
+        - name: 00-pr-review.md
           format: ai-review
     instruction: |
-      クロスレビューの指摘を基に分析内容を改善してください。
+      クロスレビューの指摘を基にレビュー内容を改善してください。
       レポートディレクトリ {report_dir} を参照してください。
     rules:
       - condition: 改善完了
@@ -125,13 +125,13 @@ movements:
         - name: 04-summary.md
           format: summary
     instruction: |
-      分析結果の最終検証を行ってください。
+      レビュー結果の最終検証を行ってください。
       レポートディレクトリ {report_dir} を参照してください。
     rules:
       - condition: 承認
         next: COMPLETE
       - condition: 差し戻し
-        next: review-comments
+        next: review-pr
 
 loop_monitors:
   - cycle:
@@ -141,7 +141,12 @@ loop_monitors:
     judge:
       persona: custom-supervisor
       instruction: |
-        分析改善サイクルが {iteration} 回繰り返されています。
+        レビュー改善サイクルが {cycle_count} 回繰り返されています。
+
+        **参照するレポート:**
+        - Claude メタレビュー: {report:01-claude-meta-review.md}
+        - Copilot メタレビュー: {report:02-copilot-meta-review.md}
+
         進捗があるか判断してください。
       rules:
         - condition: 進捗あり
