@@ -1,8 +1,8 @@
 # ~/.config/yazi/keymap.toml
-
 [mgr]
 prepend_keymap = [
   { on = ["g", "d"], run = "cd ~/Downloads", desc = "Go to Downloads" },
-  { on = ["g", "r"], run = 'shell -- ya emit cd "$(git rev-parse --show-toplevel)"', desc = "Go to git root" },
+  { on = ["g", "r"], run = 'shell -- ya emit cd "$(git rev-parse --show-toplevel)"', desc = "Goto git root" },
   { on = "!", run = 'shell "$SHELL" --block', desc = "Open shell here" },
+  { on = "T", run = '''shell -- t=$(cmux list-panes 2>/dev/null | grep -v focused | grep -oE 'pane:[0-9]+' | head -1); s=$(cmux list-pane-surfaces --pane "$t" 2>/dev/null | grep -oE 'surface:[0-9]+' | head -1); for f in %s; do cmux send --surface "$s" ":tabedit $f\n"; done''', desc = "Open in vim tabs (cmux other pane)" },
 ]
