@@ -98,6 +98,7 @@ SYMLINK_FILES=(
   ".zshrc_ai"
   ".zshrc_patches"
   ".zshrc_envmanagers"
+  ".zshrc_ghostty"
   ".config/zeno/config.yml"
   ".config/cage/presets.yml"
   ".config/ghostty/config"
