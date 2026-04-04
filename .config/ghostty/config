@@ -2,12 +2,12 @@
 
 cursor-style = block
 cursor-style-blink = false
-custom-shader = ./gradient-background.glsl
+# custom-shader = ./gradient-background.glsl
 custom-shader = ./cursor-blaze.glsl
 # for light
 # custom-shader = ./string-theory-background.glsl
 # for dark
-# custom-shader = ./singularity-background.glsl
+custom-shader = ./singularity-background.glsl
 # font-family = "HackGen Console NF"
 # font-family = "UDEV Gothic NF"
 # font-family = "UDEV Gothic NFLG"
@@ -18,7 +18,7 @@ font-feature = -liga
 font-size = 16
 # theme = 0x96f
 # theme = niji
-theme = Tinacious Design Light
+theme = Tinacious Design Dark
 
 ### features
 
