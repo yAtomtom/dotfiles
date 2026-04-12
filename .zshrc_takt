@@ -9,7 +9,7 @@ takt() {
   # プロジェクトルート直下の symlink ターゲットを cage -allow に追加
   # macOS sandbox は symlink 解決後の実パスで制御するため、project preset だけではカバーできない
   local extra_allows=()
-  for link in ./*(@N); do
+  for link in ./*(@N) .*(@N); do
     local target="${link:A}"  # zsh 組み込み realpath
     if [[ -n "$target" && -d "$target" && "$target" != "$PWD"* ]]; then
       extra_allows+=(-allow "$target")

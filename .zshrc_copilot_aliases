@@ -100,7 +100,7 @@ copilot_base() {
 
   # プロジェクトルート直下の symlink ターゲットを cage -allow に追加
   local extra_allows=()
-  for link in ./*(@N); do
+  for link in ./*(@N) .*(@N); do
     local target="${link:A}"
     if [[ -n "$target" && -d "$target" && "$target" != "$PWD"* ]]; then
       extra_allows+=(-allow "$target")
