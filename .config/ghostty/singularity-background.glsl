@@ -31,13 +31,6 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     // Sample the terminal screen texture including alpha channel
     vec4 terminalColor = texture(iChannel0, uv);
 
-    // Fallback: treat uninitialized texture (alpha ≈ 0) as background
-    if (terminalColor.a < 0.01) {
-        vec3 resultColor = mix(terminalBgColor, calculatePixelColor(fragCoord), mixFactor);
-        fragColor = vec4(resultColor, 1.0);
-        return;
-    }
-
     // Check if the current pixel is background
     // HACK: Since colors are float values, equality cannot be determined directly.
     // Therefore, consider the colors the same if the distance is less than 1/255.
