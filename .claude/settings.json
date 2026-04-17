@@ -1,4 +1,9 @@
 {
+  "cleanupPeriodDays": 9999,
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "35",
+    "CLAUDE_CODE_NO_FLICKER": "1"
+  },
   "permissions": {
     "allow": [
       "Bash(zsh -i -c 'echo $SSL_CERT_FILE')",
@@ -12,7 +17,8 @@
       "Bash(uv python dir)",
       "Bash(uv tool dir)",
       "Bash(SSL_CERT_FILE={{HOME}}/{{ORG_CA_CERT}} uv tool install --python 3.13 bigquery-mcp)",
-      "Bash(uv tool uninstall bigquery-mcp)"
+      "Bash(uv tool uninstall bigquery-mcp)",
+      "Bash(yarn build:*)"
     ],
     "deny": [
       "Read(./.env)",
@@ -191,6 +197,7 @@
       "WebFetch"
     ]
   },
+  "model": "claude-opus-4-7",
   "hooks": {
     "PreToolUse": [
       {
@@ -268,9 +275,6 @@
     "document-skills@anthropic-agent-skills": true
   },
   "effortLevel": "high",
-  "cleanupPeriodDays": 9999,
-  "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "35",
-    "CLAUDE_CODE_NO_FLICKER": "1"
-  }
+  "skipDangerousModePermissionPrompt": true,
+  "skipAutoPermissionPrompt": true
 }
