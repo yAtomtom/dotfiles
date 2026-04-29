@@ -1,5 +1,20 @@
 export ZENO_HOME=~/.config/zeno
 source ~/github.com/yuki-yano/zeno.zsh/zeno.zsh
+
+# Reap orphan sockets left by dead zsh sessions so the next zeno-start-server
+# does not race against stale entries (cause of "failed to start socket server").
+() {
+  local sock_dir="${ZENO_SOCK_DIR:-${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/zeno-${UID}}"
+  [[ -d $sock_dir ]] || return 0
+  local sock pid
+  for sock in $sock_dir/zeno-*.sock(N); do
+    pid=${${sock:t:r}#zeno-}
+    [[ $pid == <-> ]] || continue
+    (( pid == $$ )) && continue
+    kill -0 "$pid" 2>/dev/null && continue
+    command rm -f -- "$sock"
+  done
+}
 if [[ -n $ZENO_LOADED ]]; then
   # ── abbrev snippet 展開（核心）──────────────────────
   bindkey ' '    zeno-auto-snippet                    # Space: 展開
