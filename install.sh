@@ -25,6 +25,7 @@ done
 # symlink 対象
 SYMLINK_FILES=(
   ".claude/CLAUDE.md"
+  ".claude/RTK.md"
   ".claude/claude-powerline.json"
   ".claude/statusline.py"
   ".claude/instructions/security.md"
