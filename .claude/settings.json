@@ -255,6 +255,16 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{HOME}}/.claude/hooks/userpromptsubmit-unlock.sh"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

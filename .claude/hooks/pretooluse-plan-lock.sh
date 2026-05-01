@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Claude Code PreToolUse hook — blocks Edit/Write after plan approval.
 # Lock file is created by posttooluse-exitplan-guard.sh on ExitPlanMode.
-# Skill calls remove the lock (= user's explicit implementation intent).
+# Lock is removed by userpromptsubmit-unlock.sh (on /unlock prompt) or
+# by /tdd-flow's STEP 0 find -delete.
 set -uo pipefail
 
 if ! command -v jq &>/dev/null; then
@@ -21,11 +22,10 @@ fi
 # No lock → pass through
 [[ ! -f "$LOCK_FILE" ]] && exit 0
 
-# Skill → remove lock and allow (user's explicit intent to implement)
-if [[ "$TOOL_NAME" == "Skill" ]]; then
-  rm -f "$LOCK_FILE"
-  exit 0
-fi
+# 注: Skill 呼び出しでの自動解除は廃止した。
+# /unlock は UserPromptSubmit hook (userpromptsubmit-unlock.sh) で確定的に解除する。
+# /tdd-flow は SKILL.md STEP 0 で自前に find -delete を実行する。
+# 旧仕様の「全 Skill で lock を消す」は /recall や /remember 等で意図せず lock が消える副作用があった。
 
 # Edit/Write → deny (with CLAUDE_POST_PLAN_ACTION-aware message)
 if [[ "$TOOL_NAME" == "Edit" || "$TOOL_NAME" == "Write" ]]; then
