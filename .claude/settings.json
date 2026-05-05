@@ -204,7 +204,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{HOME}}/.claude/hooks/pretooluse-guard.sh"
+            "command": "$HOME/.claude/hooks/pretooluse-guard.sh"
           }
         ]
       },
@@ -213,7 +213,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{HOME}}/.claude/hooks/git-memento-rewrite.sh"
+            "command": "$HOME/.claude/hooks/git-memento-rewrite.sh"
           }
         ]
       },
@@ -222,7 +222,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{HOME}}/.claude/hooks/rtk-rewrite.sh"
+            "command": "$HOME/.claude/hooks/rtk-rewrite.sh"
           }
         ]
       },
@@ -230,7 +230,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{HOME}}/.claude/hooks/pretooluse-plan-lock.sh"
+            "command": "$HOME/.claude/hooks/pretooluse-plan-lock.sh"
           }
         ]
       }
@@ -241,7 +241,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{HOME}}/.claude/hooks/posttooluse-commit-verify.sh"
+            "command": "$HOME/.claude/hooks/posttooluse-commit-verify.sh"
           }
         ]
       },
@@ -250,7 +250,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{HOME}}/.claude/hooks/posttooluse-exitplan-guard.sh"
+            "command": "$HOME/.claude/hooks/posttooluse-exitplan-guard.sh"
           }
         ]
       }
@@ -260,7 +260,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{HOME}}/.claude/hooks/userpromptsubmit-unlock.sh"
+            "command": "$HOME/.claude/hooks/userpromptsubmit-unlock.sh"
           }
         ]
       }
