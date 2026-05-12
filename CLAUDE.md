@@ -235,11 +235,13 @@ takt -w plan -t "具体的なタスク"
 
 #### ワークフロー・ファセットの変更時
 
-ワークフローとファセットは symlink 管理のため、リポジトリ内のファイル編集が即座に `~/.takt/` に反映される。
+ワークフローとファセットは **ディレクトリ単位の symlink** で管理する（`~/.takt/workflows` と `~/.takt/facets` 全体を symlink）。リポジトリ内のファイル編集は即座に `~/.takt/` に反映される。
+
+個別ファイル単位の symlink にしてはならない。takt 0.40.0 で導入された `assertAllowedPersonaPath` の `isPathSafe(realpathSync)` チェックは、persona ファイルの realpath が allowed base ディレクトリ（同じく realpath 解決される）の配下にあることを要求する。ファイル単位の symlink にすると realpath 解決後に親ディレクトリだけ base に残り、target は dotfiles 内の絶対パスへ飛ぶため `..` で始まる相対パスとなり reject される。
 
 - **ワークフロー YAML の変更後**: `takt prompt <workflow>` でプロンプト組み立てエラーがないことを確認
 - **ファセットの変更後**: 参照元のワークフローすべてで `takt prompt` を確認
-- **ワークフローの追加**: `install.sh` の `SYMLINK_FILES` にパスを追加 → `./install.sh` 実行
+- **ワークフロー / ファセットの追加**: 既に `~/.takt/workflows`・`~/.takt/facets` がディレクトリ symlink のため、リポジトリ内にファイルを追加するだけで反映される。`install.sh` の更新は不要
 - **takt バージョンアップ後**: `TAKT_LOGGING_LEVEL=debug takt` で "Skipping invalid workflow file" が出ないことを確認。スキーマ変更により既存ワークフローが拒否される場合がある
 
 #### スキーマ上の注意点

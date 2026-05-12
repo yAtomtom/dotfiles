@@ -111,24 +111,10 @@ SYMLINK_FILES=(
   ".config/yazi/yazi.toml"
   ".config/yazi/keymap.toml"
   ".config/yazi/theme.toml"
-  ".takt/workflows/plan.yaml"
-  ".takt/workflows/implement.yaml"
-  ".takt/workflows/review-code.yaml"
-  ".takt/workflows/fix-code.yaml"
-  ".takt/workflows/review-pr.yaml"
-  ".takt/workflows/review-comments.yaml"
-  ".takt/workflows/fix-ci.yaml"
-  ".takt/workflows/plan-implement.yaml"
-  ".takt/facets/policies/design.md"
-  ".takt/facets/policies/coding.md"
-  ".takt/facets/policies/validation.md"
-  ".takt/facets/knowledge/tdd.md"
-  ".takt/facets/knowledge/tier-assessment.md"
-  ".takt/facets/personas/custom-planner.md"
-  ".takt/facets/personas/custom-coder.md"
-  ".takt/facets/personas/custom-reviewer.md"
-  ".takt/facets/personas/custom-supervisor.md"
-  ".takt/facets/personas/custom-ci-analyzer.md"
+  # takt: ディレクトリ単位の symlink（個別ファイル symlink だと
+  # takt 0.40.0 の isPathSafe(realpathSync) チェックで base 外と判定され reject される）
+  ".takt/workflows"
+  ".takt/facets"
 )
 
 # template 対象
@@ -171,6 +157,10 @@ echo ""
 echo "=== Symlink phase ==="
 for f in "${SYMLINK_FILES[@]}"; do
   mkdir -p "$HOME/$(dirname "$f")"
+  # 既存が通常ディレクトリ（symlink ではない実体）の場合、ln -snf では上書きできないため除去
+  if [ -d "$HOME/$f" ] && [ ! -L "$HOME/$f" ]; then
+    rm -rf "$HOME/$f"
+  fi
   if ln -snf "$DOT_DIR/$f" "$HOME/$f" 2>/dev/null; then
     echo "  linked: ~/$f -> $DOT_DIR/$f"
   else
