@@ -31,6 +31,8 @@ presets:
       - "$HOME/.claude.json.backup"
       - "$HOME/.claude.json.lock"
       - "$HOME/.claude.lock"
+      - "$HOME/.claude.json.tmp.*"  # claude 2.1.133+ の atomic write tmp (~/.claude.json.tmp.<pid>.<hash>)
+      - "$HOME/Library/Caches/claude-cli-nodejs"  # MCP server ログ出力先 (mcp-logs-<server>/*.jsonl)
       - "$HOME/.npm"             # npx キャッシュ用
       - "$HOME/.cache/uv"
       - "$HOME/.local/share/uv"
