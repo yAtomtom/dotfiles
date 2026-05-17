@@ -2,6 +2,7 @@
   "cleanupPeriodDays": 9999,
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "35",
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "1000000",
     "CLAUDE_CODE_NO_FLICKER": "1"
   },
   "permissions": {
