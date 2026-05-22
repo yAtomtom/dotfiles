@@ -23,7 +23,7 @@ done
 # template 対象のみ（symlink 対象は自動的にリポジトリに反映済み）
 TEMPLATE_FILES=(
   ".claude/settings.json"
-  ".claude/rules/slack-mcp-notes.md"
+  ".claude/docs/mcp/slack.md"
   ".claude/skills/recall/SKILL.md"
   ".copilot/config.json"
   ".copilot/mcp-config.json"

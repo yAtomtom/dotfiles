@@ -25,15 +25,20 @@ done
 # symlink 対象
 SYMLINK_FILES=(
   ".claude/CLAUDE.md"
-  ".claude/RTK.md"
   ".claude/claude-powerline.json"
   ".claude/statusline.py"
   ".claude/instructions/security.md"
-  ".claude/rules/context7-mcp.instructions.md"
-  ".claude/rules/notion-mcp.instructions.md"
-  ".claude/rules/figma-mcp-notes.md"
   ".claude/rules/plan-frontmatter.md"
   ".claude/rules/plan-mode-guard.md"
+  ".claude/rules/sandbox-operations.md"
+  ".claude/rules/mcp-config-protection.md"
+  ".claude/docs/takt-workflow.md"
+  ".claude/docs/faceted-prompting.md"
+  ".claude/docs/tsumiki-tdd.md"
+  ".claude/docs/rtk.md"
+  ".claude/docs/mcp/context7.md"
+  ".claude/docs/mcp/notion.md"
+  ".claude/docs/mcp/figma.md"
   ".claude/hooks/pretooluse-guard.sh"
   ".claude/hooks/git-memento-rewrite.sh"
   ".claude/hooks/rtk-rewrite.sh"
@@ -120,7 +125,7 @@ SYMLINK_FILES=(
 # template 対象
 TEMPLATE_FILES=(
   ".claude/settings.json"
-  ".claude/rules/slack-mcp-notes.md"
+  ".claude/docs/mcp/slack.md"
   ".claude/skills/recall/SKILL.md"
   ".copilot/config.json"
   ".copilot/mcp-config.json"
@@ -144,6 +149,35 @@ backup_if_exists() {
   fi
 }
 
+echo "=== Cleanup phase (stale symlinks) ==="
+# SYMLINK_FILES から外れた旧 symlink を除去する（dangling リンクのみ対象）
+STALE_PATHS=(
+  ".claude/rules/context7-mcp.instructions.md"
+  ".claude/rules/notion-mcp.instructions.md"
+  ".claude/rules/figma-mcp-notes.md"
+  ".claude/rules/slack-mcp-notes.md"
+  ".claude/RTK.md"
+)
+for f in "${STALE_PATHS[@]}"; do
+  target="$HOME/$f"
+  if [ -L "$target" ] && [ ! -e "$target" ]; then
+    rm "$target" && echo "  removed stale symlink: ~/$f"
+  elif [ -L "$target" ]; then
+    # 旧 symlink が dotfiles 内の既存ファイルを指している場合（=移動前の状態）
+    link_target=$(readlink "$target")
+    case "$link_target" in
+      "$DOT_DIR"/.claude/rules/*|"$DOT_DIR"/.claude/RTK.md)
+        rm "$target" && echo "  removed obsolete symlink: ~/$f"
+        ;;
+    esac
+  elif [ -f "$target" ] && [[ "$f" == ".claude/rules/slack-mcp-notes.md" ]]; then
+    # template 生成された実ファイル（slack-mcp-notes.md）の旧コピーを除去
+    mkdir -p "$BACKUP_DIR/$(dirname "$f")"
+    mv "$target" "$BACKUP_DIR/$f" && echo "  archived old template file: ~/$f"
+  fi
+done
+
+echo ""
 echo "=== Backup phase ==="
 for f in "${SYMLINK_FILES[@]}" "${TEMPLATE_FILES[@]}"; do
   backup_if_exists "$f"
