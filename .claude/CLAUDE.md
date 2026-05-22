@@ -114,6 +114,17 @@ Tier 2のチェックリストに加え，以下を実行せよ:
 - [ ] 設計の内容をサンドボックスにファイルとして出力し，クロスレビューを実行せよ（Tier 2チェックリスト実行前）．**プランモード中の場合はプラン承認後に延期せよ**
 - [ ] Tier 2チェックリスト完了後，設計内容をサンドボックスから確認し最終ドキュメントを出力せよ
 
+## MCP 書き込み操作の確認
+
+MCP の書き込み操作 (Notion / Slack / Figma / GitHub 等で「create」「update」「delete」「post」「move」「patch」を含むツール) を呼ぶ前に、対応 docs を必ず参照して確認手順を踏むこと:
+
+- Notion: `.claude/docs/mcp/notion.md` — Level 2/3 の確認・破壊操作ポリシー
+- Slack: `.claude/docs/mcp/slack.md` — 投稿前の対象チャンネル・全文確認
+- Figma: `.claude/docs/mcp/figma.md` — ツール選択と制約
+- context7: `.claude/docs/mcp/context7.md` — ライブラリ ID / バージョン特定手順
+
+PreToolUse hook (`pretooluse-guard.sh`) が代表的な書き込みツールを deny するが、これは二重防御の片側であり、ガイダンス確認は省略しない。
+
 ## rtk (Rust Token Killer)
 
 トークン削減プロキシ。Bash 操作で `rtk gain`（節約量分析）・`rtk discover`（節約機会の発見）・`rtk proxy`（生コマンド）等のメタコマンドを使う際は `.claude/docs/rtk.md` を参照する。通常のコマンドは PreToolUse hook が透過的に `rtk` へリライトするため、明示的に意識する必要はない。

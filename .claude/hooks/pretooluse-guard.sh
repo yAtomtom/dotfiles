@@ -124,11 +124,18 @@ case "$tool_name" in
   *__assign_copilot_to_issue|*__request_copilot_review)
     deny "GitHub write operation requires user confirmation outside of hooks"
     ;;
-  # --- Notion ---
+  # --- Notion (first-party MCP) ---
   *__notion-create-pages|*__notion-update-page|*__notion-move-pages|\
   *__notion-duplicate-page|*__notion-create-database|\
   *__notion-update-data-source|*__notion-create-comment)
     deny "Notion write operation requires user confirmation outside of hooks"
+    ;;
+  # --- Notion (Raw API) write/destructive ---
+  *__API-patch-block-children|*__API-update-a-block|*__API-delete-a-block|\
+  *__API-patch-page|*__API-post-page|*__API-move-page|\
+  *__API-create-a-comment|\
+  *__API-create-a-data-source|*__API-update-a-data-source)
+    deny "Notion Raw API write/destructive operation requires user confirmation outside of hooks"
     ;;
   # --- Figma ---
   *__create_design_system_rules|*__add_code_connect_map|\
