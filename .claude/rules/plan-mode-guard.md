@@ -24,6 +24,8 @@ Bash実行はClaude Codeプラットフォームによりプランモードを�
 
 解除方法: `/unlock` コマンド（推奨。UserPromptSubmit hook が処理）、または `! rm /tmp/.claude-plan-lock-*`（非常時、ユーザー shell で直接実行）
 
+`/unlock` は引数を受け取れる。`/unlock <prompt>` の形式で渡された引数は、lock 解除後にユーザーからの明示的な実装指示として扱われ、Claude が続けて実装に着手する。lock が残存している場合は引数があっても実装に着手しない。引数なしの `/unlock` は従来通り「指示待ち」のまま。
+
 **Claude は `/unlock` を自発的に実行してはならない。** lock の目的は Claude の自動実装防止であり、解除はユーザーの意思で行うもの。Claude が deny された場合はユーザーに `/unlock` の実行を案内すること。
 
 **例外1**: `CLAUDE_POST_PLAN_ACTION` 環境変数が設定されている場合、ExitPlanMode 後に該当スキルの自動実行は許可される。lock は対象スキル側の処理（例: `/tdd-flow` の STEP 0）で削除される。ExitPlanMode がエラーを返した場合は自動実行しない。
