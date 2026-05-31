@@ -7,7 +7,10 @@ presets:
     allow:
       - path: "/tmp"
         eval-symlinks: true  # macOS: /tmp -> /private/tmp
-      - "/dev/tty"
+      # /dev 配下を全許可: ターミナル/PTY (tty, ptmx, ttysXXX) を一括で許可するため。
+      # cage の path 指定は glob/regex 非対応のため個別列挙が現実的でなく、
+      # /dev 配下の書き込みは非root では実害が小さい（disk* 等は root 必須）。
+      - "/dev"
 
   # Ruby実行環境 (bundle exec rubocop, rspec等のキャッシュ書き込み)
   ruby:
