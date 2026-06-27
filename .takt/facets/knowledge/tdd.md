@@ -17,3 +17,10 @@
 2. Apply KISS and functional programming principles
 3. Remove duplication only when abstraction is beneficial
 4. Completion gate: all tests PASS (unchanged)
+
+## Running Tests Safely
+- Make the runner self-terminate. Run a single test file, not the whole suite, while iterating
+- Jest: `yarn jest --ci --watchAll=false <file>` — never bare `yarn test` (it may start watch mode or hang)
+  - Add `--forceExit` only as a last resort; it hides open handles rather than fixing them, so treat it as a workaround, not a cure
+- RSpec: run only the target spec file (`bundle exec rspec <file>`); do not run the full suite
+- See `policies/coding.md` → Command Execution Safety for why a non-terminating command must never be piped into `tail`/`head`

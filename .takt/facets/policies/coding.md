@@ -23,6 +23,12 @@
 - Write concise business use-case context that code cannot convey
 - Do not add comments for things self-evident from naming or tests
 
+## Command Execution Safety (Headless)
+- The shell has no TTY and stdin is closed; every command must terminate on its own
+- Do not run watch mode, dev servers, REPLs, or interactive prompts that wait for input
+- Do not pipe a command without a guaranteed exit into `tail`/`head`/`less`; the pipe stays silent until upstream EOF and can hang indefinitely
+- Prefer narrowly-scoped, short-lived commands over broad ones
+
 ## Test Quality
 - Test targets' direct dependencies are not mocked
 - Mocks/stubs are used only for concerns outside the test's focus
