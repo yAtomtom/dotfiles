@@ -225,7 +225,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/rtk-rewrite.sh"
+            "command": "$HOME/.claude/hooks/rtk-guard.sh"
           }
         ]
       },

@@ -42,6 +42,7 @@ SYMLINK_FILES=(
   ".claude/hooks/pretooluse-guard.sh"
   ".claude/hooks/git-memento-rewrite.sh"
   ".claude/hooks/rtk-rewrite.sh"
+  ".claude/hooks/rtk-guard.sh"
   ".claude/hooks/posttooluse-commit-verify.sh"
   ".claude/hooks/posttooluse-exitplan-guard.sh"
   ".claude/hooks/pretooluse-plan-lock.sh"
