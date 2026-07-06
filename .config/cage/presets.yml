@@ -20,6 +20,13 @@ presets:
       - "$HOME/.rbenv"
       - "$HOME/.cache/rubocop_cache"
 
+  # Rust実行環境 (cargo test/build のレジストリキャッシュ・toolchain 書き込み)
+  rust:
+    allow:
+      - "$HOME/.cargo"    # registry キャッシュ・git checkout・ダウンロードした crate
+      - "$HOME/.rustup"   # toolchain・component の書き込み
+      - "/Volumes"        # dmg 生成時のディスクイメージマウント先 (/Volumes/<name>/)
+
   # プロジェクトディレクトリ + git操作
   project:
     allow:
@@ -76,6 +83,7 @@ auto-presets:
       - dotfiles-repo
       - tmp
       - ruby
+      - rust
 
   - command: copilot
     presets:
