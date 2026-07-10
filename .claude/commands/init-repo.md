@@ -1,9 +1,11 @@
 ---
-description: "新規リポジトリにgit-memento + commit-makerをセットアップ"
+description: "新規リポジトリにgit-memento + /commit をセットアップ"
 allowed-tools: Bash, Read, Grep, Glob
 ---
 
-カレントディレクトリのgitリポジトリに対して、git-mementoとcommit-makerのプロジェクトレベルセットアップを行います。
+カレントディレクトリのgitリポジトリに対して、git-mementoと `/commit` コマンドのプロジェクトレベルセットアップを行います。
+
+なお `/commit` はメインエージェント自身がコミットを実行する（memento hook がサブエージェントでは発火しないため）。サブエージェントには依存しないので、コピー対象は `commit.md` のみとする。
 
 ## 手順
 
@@ -30,16 +32,13 @@ git config memento.claude.bin "$MEMENTO_BIN"
 グローバルの `~/.claude/` からプロジェクトにファイルをコピーします。既にファイルが存在する場合はスキップして警告してください。
 
 コピー対象:
-- `~/.claude/agents/commit-maker.md` → `.claude/agents/commit-maker.md`
 - `~/.claude/commands/commit.md` → `.claude/commands/commit.md`
 
 ```bash
 # コピー元の存在確認
-[ -f ~/.claude/agents/commit-maker.md ] || { echo "ERROR: ~/.claude/agents/commit-maker.md not found"; exit 1; }
 [ -f ~/.claude/commands/commit.md ] || { echo "ERROR: ~/.claude/commands/commit.md not found"; exit 1; }
-mkdir -p .claude/agents .claude/commands
+mkdir -p .claude/commands
 # 既存ファイルがなければコピー
-[ -f .claude/agents/commit-maker.md ] && echo "SKIP: .claude/agents/commit-maker.md already exists" || cp ~/.claude/agents/commit-maker.md .claude/agents/commit-maker.md
 [ -f .claude/commands/commit.md ] && echo "SKIP: .claude/commands/commit.md already exists" || cp ~/.claude/commands/commit.md .claude/commands/commit.md
 ```
 
@@ -49,7 +48,7 @@ mkdir -p .claude/agents .claude/commands
 echo "=== memento config ==="
 git config --get memento.claude.bin
 echo "=== project files ==="
-ls -la .claude/agents/commit-maker.md .claude/commands/commit.md
+ls -la .claude/commands/commit.md
 ```
 
 セットアップ結果を日本語でレポートしてください。

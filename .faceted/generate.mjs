@@ -58,7 +58,6 @@ const EXTRA_FRONTMATTER = {
   'reviewer':          { type: 'agent', extra: { tools: 'Bash, Read, Grep, Glob', maxTurns: 15 } },
   'planner':           { type: 'agent', extra: { tools: 'Bash, Read, Grep, Glob', maxTurns: 15 } },
   'planner-frontend':  { type: 'agent', extra: { tools: 'Bash, Read, Grep, Glob', maxTurns: 15 } },
-  'commit-maker':      { type: 'agent', extra: { tools: 'Bash, Read, Grep, Glob', maxTurns: 10 } },
   'pr-maker':          { type: 'agent', extra: { tools: 'Bash, Read, Grep, Glob', maxTurns: 8 } },
   'cross-reviewer':    { type: 'agent', extra: { tools: 'Bash, Read, Grep, Glob', maxTurns: 10 } },
   'address':           { type: 'agent', extra: { tools: 'Bash, Read, Write, Edit, Grep, Glob', maxTurns: 20 } },
