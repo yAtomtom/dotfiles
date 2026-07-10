@@ -31,12 +31,22 @@ if echo "$CMD" | grep -qE '(^|[;&|][[:space:]]*)git memento commit( |$)'; then
 fi
 
 # --- Resolve session ID ---
-# stdin JSON contains session_id from Claude Code
+# stdin JSON contains session_id from Claude Code.
+# Main sessions use UUID form; subagents (e.g. commit-maker) use `agent-<hex>`,
+# which git-memento resolves only with the `agent-` prefix. Accept both, and
+# normalize a bare subagent hex by prefixing `agent-`. Anything else passes
+# through unchanged (no rewrite). Character classes stay limited to [0-9a-f-]
+# and the literal `agent-`, so the value remains injection-safe in the sed path.
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
 
-# UUIDv4 format validation (injection prevention)
-if ! echo "$SESSION_ID" | grep -qE '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'; then
-  exit 0
+if echo "$SESSION_ID" | grep -qE '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'; then
+  :                                   # UUID form (main session): use as-is
+elif echo "$SESSION_ID" | grep -qE '^agent-[0-9a-f]{16,64}$'; then
+  :                                   # agent-prefixed (subagent): use as-is
+elif echo "$SESSION_ID" | grep -qE '^[0-9a-f]{16,64}$'; then
+  SESSION_ID="agent-$SESSION_ID"      # bare subagent hex: normalize
+else
+  exit 0                              # unknown format: pass through
 fi
 
 # --- Rewrite: git commit ... → env -u CLAUDECODE git memento commit "$SESSION_ID" ... ---

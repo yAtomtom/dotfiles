@@ -37,6 +37,13 @@ if [ -n "$CMD" ]; then
   if printf '%s' "$CMD" | grep -qE "${POS}git([[:space:]]+(-[^[:space:]]*|[^[:space:]]*=[^[:space:]]*))*[[:space:]]+diff([[:space:]]|\$)"; then
     exit 0
   fi
+  # git commit — must pass through so git-memento-rewrite.sh's rewrite survives.
+  # Both hooks return updatedInput for `git commit`; the later rtk rewrite would
+  # win and clobber the memento rewrite (`git memento commit`), dropping the
+  # session note. rtk gives ~no savings on commit output, so exclude it.
+  if printf '%s' "$CMD" | grep -qE "${POS}git([[:space:]]+(-[^[:space:]]*|[^[:space:]]*=[^[:space:]]*))*[[:space:]]+commit([[:space:]]|\$)"; then
+    exit 0
+  fi
 fi
 
 # Not excluded — delegate to the pristine rtk hook, preserving its stdout/exit code.
