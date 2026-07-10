@@ -107,7 +107,7 @@ DDDにおける境界付けられたコンテキスト(目的)に対して実装
 
 | 実行者 | 出力先 | レビュアー | コマンド |
 |--------|--------|------------|----------|
-| Claude | `~/claude-sandbox/` | Copilot | `copilot --model "gpt-5.3-codex" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<出力ファイル名> をレビューしてください"` |
+| Claude | `~/claude-sandbox/` | Copilot | `copilot --model "gpt-5.3-codex" --effort "xhigh" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<出力ファイル名> をレビューしてください"` |
 | Copilot | `~/copilot-sandbox/` | Claude | `claude -p "~/copilot-sandbox/<出力ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
 
 ## Testing

@@ -58,7 +58,7 @@ production codeの変更は禁止。変更は別のエージェントに委ね�
 
 | 実行者 | レビュアー | コマンド |
 |--------|------------|----------|
-| Claude | Copilot | `command copilot --model "gpt-5.3-codex" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<ファイル名> をレビューしてください"` |
+| Claude | Copilot | `command copilot --model "gpt-5.3-codex" --effort "xhigh" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<ファイル名> をレビューしてください"` |
 | Copilot | Claude | `command claude -p "~/copilot-sandbox/<ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
 
 ## Instruction
@@ -85,7 +85,7 @@ production codeの変更は禁止。変更は別のエージェントに委ね�
 ## レビュー実行コマンド
 
 ```bash
-command copilot --model "gpt-5.3-codex" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<対象ファイル名> をレビューしてください"
+command copilot --model "gpt-5.3-codex" --effort "xhigh" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<対象ファイル名> をレビューしてください"
 ```
 
 ## 判定の扱い
