@@ -3,4 +3,4 @@ language: ja
 model: 'claude-opus-4-8[1m]'
 provider_options:
   claude:
-    effort: high
+    effort: max
