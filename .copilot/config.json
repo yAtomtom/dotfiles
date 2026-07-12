@@ -1,5 +1,5 @@
 {
-  "banner": "never",
+  "firstLaunchAt": "2026-03-11T00:00:00.000Z",
   "lastLoggedInUser": {
     "host": "https://github.com",
     "login": "yAtomtom"
@@ -10,12 +10,12 @@
       "login": "yAtomtom"
     }
   ],
-  "renderMarkdown": true,
-  "model": "gpt-5.3-codex",
-  "effortLevel": "low",
-  "trusted_folders": [
+  "trustedFolders": [
     "{{HOME}}/github.com/{{ORG_REPO}}",
-    "{{HOME}}/github.com/{{ORG_REPO}}-dotfiles"
+    "{{HOME}}/github.com/{{ORG_REPO}}-dotfiles",
+    "{{HOME}}/github.com/yAtomtom/youtube-chat-rearranger",
+    "{{HOME}}/github.com/yAtomtom/tech-talks"
   ],
-  "firstLaunchAt": "2026-03-11T00:00:00.000Z"
+  "appTipShown": true,
+  "reasoningSummariesCleanupDone": true
 }
