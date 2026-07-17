@@ -24,3 +24,10 @@ brew() {
   esac
   return $ret
 }
+
+# Workaround: prezto directory モジュールが NOCLOBBER を設定するため、
+# cmux のシム書き込み `_cmux_install_cli_command_shim`（> をプレーンに使用、>| 非使用）が
+# 既存 shim に対して "file exists" 警告を出す。cmux ペイン内でのみ CLOBBER を有効化して抑止する
+# （通常ターミナルでは NOCLOBBER の安全策を維持）。
+# TODO: cmux 統合が `>|` に修正されたら削除。
+[[ -n "${CMUX_SHELL_INTEGRATION:-}" ]] && setopt CLOBBER
