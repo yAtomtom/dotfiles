@@ -62,6 +62,7 @@ presets:
     allow:
       - "$HOME/.config/github-copilot"
       - "$HOME/.copilot"
+      - "$HOME/Library/Caches/copilot"  # SEA 同梱パッケージ展開先 (sea-loader.js が pkg/ を作成)
       - "$HOME/.npm"             # npx キャッシュ用
       - "$HOME/.cache/uv"
       - "$HOME/.local/share/uv"
