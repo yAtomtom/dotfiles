@@ -5,3 +5,22 @@ if (( $+functions[_zsh_highlight] )) && (( ! $+functions[_zsh_highlight_orig] ))
   functions[_zsh_highlight_orig]="$functions[_zsh_highlight]"
   _zsh_highlight() { _zsh_highlight_orig "$@" 2>/dev/null; }
 fi
+
+# Workaround: claude-code cask は Developer ID 署名済みだが未 notarize のため、
+# brew が付与する com.apple.quarantine で macOS Gatekeeper がダイアログを出す。
+# Homebrew 6.x では --no-quarantine が削除されているため、upgrade/install/reinstall 直後に
+# claude バイナリの quarantine を除去する（起動経路に依存せず、claude-code のみに限定）。
+# TODO: Anthropic が notarization 対応したら削除。
+brew() {
+  command brew "$@"
+  local ret=$?
+  case "$1" in
+    upgrade|install|reinstall)
+      local b=/opt/homebrew/bin/claude
+      if [[ -e "$b" ]] && xattr "$b" 2>/dev/null | grep -q com.apple.quarantine; then
+        xattr -d com.apple.quarantine "$b" 2>/dev/null
+      fi
+      ;;
+  esac
+  return $ret
+}

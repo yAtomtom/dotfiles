@@ -1,9 +1,4 @@
 claude() {
-  local bin
-  bin=$(whence -p claude)  # zsh組み込み: 関数を無視して実際のパスを返す
-  if xattr "$bin" 2>/dev/null | rg -q 'com.apple.quarantine'; then
-    xattr -dr com.apple.quarantine "$bin"
-  fi
   # プロジェクト対応 dotfiles ディレクトリの導出
   # git remote get-url を使用（worktree でも正しいリポジトリ名が取れる）
   local repo_name dotfiles_dir=""
