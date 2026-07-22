@@ -32,6 +32,7 @@ TEMPLATE_FILES=(
   ".claude/docs/mcp/slack.md"
   ".claude/skills/recall/SKILL.md"
   ".copilot/config.json"
+  ".copilot/settings.json"
   ".copilot/mcp-config.json"
   ".serena/serena_config.yml"
 )

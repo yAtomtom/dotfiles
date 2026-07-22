@@ -1,0 +1,5 @@
+{
+  "renderMarkdown": true,
+  "model": "gpt-5.3-codex",
+  "effortLevel": "xhigh"
+}
