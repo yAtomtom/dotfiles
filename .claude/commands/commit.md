@@ -29,6 +29,7 @@ git commit -m "<type>(<scope>): <subject>" -m "<body>" -m "Co-Authored-By: Claud
 ```
 
 - **`git memento commit` を手動で構築しない**。plain な `git commit` を実行し、リライトは hook に任せる
+- **リポジトリを cwd にして素の `git commit` を実行する**。`git -C <path> commit` や `FOO=bar git commit` 等の非正規形は memento note が付かないため hook が deny する。別リポジトリへコミットする場合は `cd <path> && git commit ...` を使う
 - multi-line 文字列や `-F <file>` は使わない（段落は `-m` の反復で表現する。git-memento は `-m` の反復に対応）
 - コミットが未作成の場合のみ、原因（生エラー）を報告した上で対処を判断する
 
