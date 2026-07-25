@@ -186,16 +186,6 @@
       "Edit(./config/credentials.yml.enc)",
       "Edit(./config/credentials/**)",
       "Edit(./config/credentials.*)",
-      "Write(.env*)",
-      "Write(**/secrets/**)",
-      "Write(**/*.key)",
-      "Write(**/*.pem)",
-      "Write(**/*.p12)",
-      "Write(**/*.pfx)",
-      "Write(**/*.jks)",
-      "Write(**/*.keystore)",
-      "Write(**/config/credentials.*)",
-      "Write(**/config/master.key)",
       "mcp__supabase__execute_sql",
       "WebFetch"
     ]
