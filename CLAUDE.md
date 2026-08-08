@@ -121,7 +121,7 @@ zeno-stop-server && zeno-start-server
 | `.config/cage/` | cage サンドボックスプリセット |
 | `.takt/` | takt（マルチエージェントワークフロー定義） |
 | `.faceted/` | faceted-prompting（エージェント・スキルの生成元） |
-| `bin/` | CLI ツール（mcp-doctor 等、`install.sh` で `/opt/homebrew/bin/` にデプロイ） |
+| `bin/` | CLI ツール（mcp-doctor 等、`install.sh` で macOS: `/opt/homebrew/bin/`, Linux/WSL: `~/.local/bin/` にデプロイ） |
 
 ### takt ワークフロー
 

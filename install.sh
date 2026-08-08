@@ -250,15 +250,23 @@ done
 
 echo ""
 echo "=== Bin phase ==="
-BIN_DIR="/opt/homebrew/bin"
+# macOS は Homebrew 配下、Linux/WSL は XDG 標準のユーザー bin（PATH 上）に配置する
+case "$(uname -s)" in
+  Darwin) BIN_DIR="/opt/homebrew/bin" ;;
+  *)      BIN_DIR="$HOME/.local/bin"; mkdir -p "$BIN_DIR" ;;
+esac
 for f in bin/*; do
   name=$(basename "$f")
   if [ -f "$BIN_DIR/$name" ]; then
     mkdir -p "$BACKUP_DIR/bin"
     cp -a "$BIN_DIR/$name" "$BACKUP_DIR/bin/$name" 2>/dev/null && echo "  backed up: $BIN_DIR/$name"
   fi
-  cp "$DOT_DIR/$f" "$BIN_DIR/$name" && chmod +x "$BIN_DIR/$name"
-  echo "  installed: $BIN_DIR/$name"
+  if cp "$DOT_DIR/$f" "$BIN_DIR/$name" 2>/dev/null && chmod +x "$BIN_DIR/$name"; then
+    echo "  installed: $BIN_DIR/$name"
+  else
+    echo "  ERROR: failed to install $BIN_DIR/$name"
+    ERRORS+=("bin: $name")
+  fi
 done
 
 echo ""
