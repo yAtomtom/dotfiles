@@ -264,7 +264,29 @@ done
 echo ""
 echo "=== Notes repo phase ==="
 CLAUDE_NOTES_REPO="$HOME/github.com/yAtomtom/claude-notes"
-if [ -d "$CLAUDE_NOTES_REPO" ]; then
+if [ -n "${WIN_NOTES_DIR:-}" ]; then
+  # WSL: notes の実体を Windows 側フォルダに置き、Obsidian からネイティブに開けるようにする
+  # （wsl.localhost UNC 経由の Obsidian は vault を開けないため）
+  if ! grep -qi microsoft /proc/version 2>/dev/null; then
+    echo "  SKIP: WIN_NOTES_DIR is set but this is not WSL (check .env)"
+  elif [[ "$WIN_NOTES_DIR" != /mnt/* ]]; then
+    echo "  SKIP: WIN_NOTES_DIR must be an absolute /mnt/<drive>/ path: $WIN_NOTES_DIR"
+  else
+    mkdir -p "$WIN_NOTES_DIR"
+    if [ -d "$HOME/.claude/notes" ] && [ ! -L "$HOME/.claude/notes" ]; then
+      echo "  WARN: ~/.claude/notes is a real directory, not a symlink"
+      echo "  migrate manually: cp -r ~/.claude/notes/*.md $WIN_NOTES_DIR/ && mv ~/.claude/notes ~/.claude/notes.bak"
+    else
+      mkdir -p "$HOME/.claude"
+      ln -snf "$WIN_NOTES_DIR" "$HOME/.claude/notes"
+      echo "  linked: ~/.claude/notes -> $WIN_NOTES_DIR"
+    fi
+    # cage は symlink 解決後の実体パスで判定するため allowlist との一致を検証する
+    if ! grep -qF "$WIN_NOTES_DIR" "$DOT_DIR/.config/cage/presets.yml"; then
+      echo "  WARN: $WIN_NOTES_DIR is not in .config/cage/presets.yml allowlist"
+    fi
+  fi
+elif [ -d "$CLAUDE_NOTES_REPO" ]; then
   if [ -L "$HOME/.claude/notes" ]; then
     echo "  already linked: ~/.claude/notes"
   elif [ -d "$HOME/.claude/notes" ]; then

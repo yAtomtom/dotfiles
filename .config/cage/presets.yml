@@ -47,7 +47,8 @@ presets:
       - "$HOME/.cache/uv"
       - "$HOME/.local/share/uv"
       - "$HOME/claude-sandbox"
-      - "$HOME/github.com/yAtomtom/claude-notes"  # ~/.claude/notes の symlink 先
+      - "$HOME/github.com/yAtomtom/claude-notes"  # mac: ~/.claude/notes の symlink 先
+      - "/mnt/c/Users/atom/.claude/notes"  # WSL: ~/.claude/notes の symlink 先（mac では存在せず無効）
       - "$HOME/.copilot"         # クロスレビュー: Claude → Copilot 呼び出し時の書き込み先
       - "$HOME/copilot-sandbox"  # クロスレビュー: Copilot のサンドボックス出力先
     allow-keychain: true
