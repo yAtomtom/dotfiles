@@ -4,3 +4,5 @@ model: 'claude-opus-5'
 provider_options:
   claude:
     effort: max
+  copilot:
+    effort: high
