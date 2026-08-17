@@ -23,10 +23,11 @@ steps:
   - name: design
     persona: custom-planner
     policy: design
-    edit: false
+    edit: true
+    required_permission_mode: edit
     provider_options:
       claude:
-        allowed_tools: [Read, Glob, Grep, WebSearch, WebFetch]
+        allowed_tools: [Read, Glob, Grep, Write, Edit, WebSearch, WebFetch]
     output_contracts:
       report:
         - name: 00-plan.md
@@ -35,7 +36,30 @@ steps:
       以下のタスクについて設計を行ってください。
       1. プロジェクトの関連ファイルを読み込み、現状の設計を把握する
       2. 設計方針に基づいて設計案を作成する
+      3. 設計案の本文（成果物の正本）を {report_dir}/plan-document.md に Write ツールで書き出す
+         - 1行目は「# Plan: <タスク名>」の見出しにする
+         - 本文に「## 」セクションを1つ以上含める
+         - 最終行は「<!-- END OF PLAN -->」のみとする
+         - このファイル以外のファイルを作成・変更してはならない（プロジェクトのソースは読み取りのみ）
+         - 要件が不明確で ABORT する場合も、不明点を記録した plan-document.md を同じ形式で書き出すこと
+      応答本文には設計の要約のみを記載し、プラン全文を再掲しないこと。
       Task: {task}
+    # 成果物欠損の機械検証。応答分割等でプラン本文が壊れた場合にステップを再実行させる
+    # （plan-implement.yaml の design / fix-design の quality_gates と同期すること）
+    quality_gates:
+      - type: command
+        name: plan-document-complete
+        command: |
+          set -eu
+          metas=$(grep -lE '"status": *"running"' .takt/runs/*/meta.json) || { echo "no running run meta found"; exit 1; }
+          [ "$(printf '%s\n' "$metas" | wc -l)" -eq 1 ] || { echo "expected exactly 1 running run: $metas"; exit 1; }
+          dir=$(sed -n 's/.*"reportDirectory": *"\([^"]*\)".*/\1/p' "$metas")
+          f="$dir/plan-document.md"
+          [ -f "$f" ] || { echo "missing plan document: $f"; exit 1; }
+          head -n 1 "$f" | grep -q '^# ' || { echo "first line must be '# ' heading: $f"; exit 1; }
+          grep -q '^## ' "$f" || { echo "no '## ' section found: $f"; exit 1; }
+          tail -n 1 "$f" | grep -qx '<!-- END OF PLAN -->' || { echo "missing end marker: $f"; exit 1; }
+          [ "$(wc -c < "$f")" -ge 1000 ] || { echo "plan document too small: $f"; exit 1; }
     rules:
       - condition: 設計案が作成された
         next: cross-review
@@ -57,6 +81,7 @@ steps:
               format: ai-review
         instruction: |
           設計案をレビューしてください。
+          設計案の本文: {report_dir}/plan-document.md を読んで全文を確認すること。
           観点: アーキテクチャ、変更容易性、DDD整合性
           {previous_response}
         rules:
@@ -74,6 +99,7 @@ steps:
               format: ai-review
         instruction: |
           設計案をレビューしてください。
+          設計案の本文: {report_dir}/plan-document.md を読んで全文を確認すること。
           観点: 実装可能性、セキュリティ、パフォーマンス
           {previous_response}
         rules:
@@ -88,19 +114,43 @@ steps:
   - name: fix
     persona: custom-planner
     policy: design
-    edit: false
+    edit: true
+    required_permission_mode: edit
     session: refresh
     pass_previous_response: false
     provider_options:
       claude:
-        allowed_tools: [Read, Glob, Grep]
+        allowed_tools: [Read, Glob, Grep, Edit, Write]
     output_contracts:
       report:
         - name: 00-plan.md
           format: plan
     instruction: |
       クロスレビューの指摘を検討し、妥当な指摘に対して設計案を改善してください。
-      レポートディレクトリ {report_dir} 内のレビュー結果を参照してください。
+      1. レポートディレクトリ {report_dir} 内のレビュー結果（01-claude-review.md, 02-copilot-review.md）を読む
+      2. {report_dir}/plan-document.md を Read し、妥当な指摘の該当箇所だけを Edit ツールで差分修正する
+         - 全文の書き直しは禁止。既存ファイルへの部分編集のみ行う
+         - 例外: plan-document.md が存在しない・破損している場合のみ、00-plan.md とレビュー結果と
+           プロジェクトの読解に基づき Write ツールで全文を再作成する（復旧不能ループの防止）
+         - 先頭の「# Plan:」見出しと最終行の「<!-- END OF PLAN -->」を維持する
+         - このファイル以外のファイルを作成・変更してはならない
+      3. 応答本文には修正内容の要約のみを記載する（プラン全文を応答に再掲しない）
+    # 成果物欠損の機械検証。応答分割等でプラン本文が壊れた場合にステップを再実行させる
+    # （plan-implement.yaml の design / fix-design の quality_gates と同期すること）
+    quality_gates:
+      - type: command
+        name: plan-document-complete
+        command: |
+          set -eu
+          metas=$(grep -lE '"status": *"running"' .takt/runs/*/meta.json) || { echo "no running run meta found"; exit 1; }
+          [ "$(printf '%s\n' "$metas" | wc -l)" -eq 1 ] || { echo "expected exactly 1 running run: $metas"; exit 1; }
+          dir=$(sed -n 's/.*"reportDirectory": *"\([^"]*\)".*/\1/p' "$metas")
+          f="$dir/plan-document.md"
+          [ -f "$f" ] || { echo "missing plan document: $f"; exit 1; }
+          head -n 1 "$f" | grep -q '^# ' || { echo "first line must be '# ' heading: $f"; exit 1; }
+          grep -q '^## ' "$f" || { echo "no '## ' section found: $f"; exit 1; }
+          tail -n 1 "$f" | grep -qx '<!-- END OF PLAN -->' || { echo "missing end marker: $f"; exit 1; }
+          [ "$(wc -c < "$f")" -ge 1000 ] || { echo "plan document too small: $f"; exit 1; }
     rules:
       - condition: 修正完了
         next: cross-review
@@ -125,11 +175,16 @@ steps:
           format: summary
     instruction: |
       設計の最終検証を行ってください。
-      レポートディレクトリ {report_dir} 内の設計案とレビュー結果を確認してください。
+      1. 設計案本文（成果物の正本） {report:plan-document.md} を確認する
+         - ファイルが欠損している、先頭が「# Plan:」見出しでない、最終行が「<!-- END OF PLAN -->」でない場合は
+           成果物欠損として差し戻すこと
+      2. レポートディレクトリ {report_dir} 内のレビュー結果と 00-plan.md（補助のタスク計画サマリ）を確認する
     rules:
       - condition: 承認
         next: COMPLETE
       - condition: 差し戻し
+        next: design
+      - condition: 成果物欠損
         next: design
 
 loop_monitors:
