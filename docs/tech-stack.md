@@ -133,6 +133,8 @@
 ### 主要コマンド
 ```bash
 # シェルスクリプトの lint
+# shellcheck 未インストール時は `bash -n <file>`（構文チェックのみ、lint 未実施）にフォールバック。
+# インストールはユーザー手動: brew install shellcheck
 shellcheck install.sh export.sh
 
 # シェルスクリプトのフォーマット

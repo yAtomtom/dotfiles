@@ -17,6 +17,8 @@ cp .env.example .env && vi .env
 ./export.sh
 
 # シェルスクリプトの lint
+# shellcheck 未インストールの場合は `bash -n <file>` にフォールバックする（構文チェックのみで lint は未実施と報告すること）。
+# インストールはユーザーが手動で行う: brew install shellcheck（brew install は Claude 実行禁止）
 shellcheck install.sh export.sh
 
 # MCP サーバーの前提条件チェック
