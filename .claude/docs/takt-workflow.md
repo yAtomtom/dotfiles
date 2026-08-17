@@ -99,6 +99,10 @@ takt -w plan -c
 takt prompt <workflow>
 
 # 2. mock でフロー遷移確認（API 消費なし）
+# 注意: mock は judge が汎用応答を分類できず rule_no_match で abort する（quality gate 実行前に終了）。
+# quality gate 自体の検証は node で takt の runCommandQualityGate を直接呼ぶ:
+#   node --input-type=module -e "import { runCommandQualityGate } from
+#   '<takt>/dist/core/workflow/quality-gates/commandGateRunner.js'; ..."
 takt -w <workflow> --provider mock -t "テスト"
 
 # 3. claude のみ実行（design ステップ確認）
@@ -126,3 +130,24 @@ takt -w plan -t "具体的なタスク"
 - `output_contracts.report` の各エントリには `format` フィールドが必須。ビルトインフォーマットは `takt catalog output-contracts` で確認
 - `loop_monitors` の judge `instruction` には `{report:filename}` テンプレート変数でレポート参照が必須
 - v0.34.0 で terminology が変更: `movements` → `steps`, `max_movements` → `max_steps`, `initial_movement` → `initial_step`, `piece_config` → `workflow_config`（旧キーは後方互換エイリアスあり）
+- `quality_gates`（command 型）: ステップ完了後・遷移判定前に projectRoot を cwd としてシェル実行され、非 0 終了で同ステップを Phase 1 から再実行する（max_steps を消費）。**遷移判定より前に走るため ABORT 遷移もゲート失敗で塞がれる**（ABORT する場合も成果物を書くよう instruction 側で担保する）。環境変数は PATH 等の最小 allowlist のみで `{report_dir}` 等のテンプレート変数は展開されない。失敗ログは `.takt/quality-gates/logs/` に出力される。**グローバル config（`~/.takt/config.yaml`）の `workflow_command_gates.custom_scripts: true` が必須**（未設定だとロード時に拒否される）
+
+## plan / plan-implement のプラン本文契約
+
+設計成果物の正本は `{report_dir}/plan-document.md`。planner ステップ（design / fix / fix-design）が `edit: true` + `required_permission_mode: edit` で Write/Edit ツールにより直接書く。`00-plan.md`（`format: plan` の Phase 2 レポート）は補助的なタスク計画サマリであり正本ではない。
+
+契約（design / fix の command quality gate `plan-document-complete` が機械検証する）:
+
+- 1 行目が `# ` 見出し（先頭欠け検出）
+- `## ` セクションが 1 つ以上
+- 最終行が `<!-- END OF PLAN -->` のみ（末尾切れ検出）
+- 1000 バイト以上
+
+背景: 成果物を「応答本文そのもの」とする旧方式は、応答がモデル出力上限で複数メッセージに分割された際に takt が最後の 1 通のみを採用し、成果物が断片化する障害を起こした（tt-image-viewer run `20260816-140920`）。ファイル直接書き込み + 機械ゲートにより、応答長と成果物サイズを分離している。
+
+注意: ゲートは meta.json の `"status": "running"` で現在 run を特定するため、中断等で running のまま残った stale run があると「expected exactly 1 running run」で明示的に失敗する。再実行前に stale run の meta.json を整理すること。
+
+残存リスク（既知の制約）:
+
+- ゲート失敗ログ `.takt/quality-gates/logs/` は**ワークフローを実行したリポジトリ側**に作られる。実行先リポジトリの `.gitignore` で `.takt/` 配下が ignore されていることを確認すること
+- planner ステップの「plan-document.md 以外を変更しない」（ソース read-only）は instruction による指示であり、ゲートでは機械検証していない。dirty tree での偽陽性なしに検証できる手段が takt にないため、レビュー工程（cross-review / supervise）での検出に委ねる
