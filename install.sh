@@ -32,6 +32,7 @@ SYMLINK_FILES=(
   ".claude/rules/plan-mode-guard.md"
   ".claude/rules/sandbox-operations.md"
   ".claude/rules/mcp-config-protection.md"
+  ".claude/rules/edit-discipline.md"
   ".claude/docs/takt-workflow.md"
   ".claude/docs/faceted-prompting.md"
   ".claude/docs/tsumiki-tdd.md"
