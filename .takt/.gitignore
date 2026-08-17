@@ -4,7 +4,11 @@
 # This file itself
 !.gitignore
 
-# Facets and pieces (version-controlled)
+# Facets and workflows (version-controlled)
+# NOTE: pieces/ -> workflows/ リネーム（takt v0.34.0 対応）時の whitelist 更新漏れを修正。
+# これがないと新規ワークフロー YAML が silent に gitignore される
+!workflows/
+!workflows/**
 !pieces/
 !pieces/**
 !facets/
