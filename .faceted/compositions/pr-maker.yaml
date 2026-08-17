@@ -1,7 +1,0 @@
-name: pr-maker
-description: "リモートにpush済みのブランチからgh pr createでプルリクエストを作成する"
-persona: pr-operations
-policies:
-  - pr-rules
-  - report-language-ja
-instruction: ../facets/output-contracts/pr-creation-flow.md

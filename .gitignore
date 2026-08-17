@@ -32,9 +32,6 @@
 .copilot/pkg/
 .copilot/session-state/
 
-# prompt-review reports (contains org-specific details)
-.claude/skills/prompt-review/reports/
-
 # Backup
 .dotfiles-backup/
 
@@ -42,9 +39,6 @@
 .serena/language_servers/
 .serena/logs/
 .serena/prompt_templates/
-
-# skill-auditor reports
-.claude/skill-report/
 
 # takt auto-generated
 .takt/config.yaml

@@ -50,15 +50,12 @@ const EXTRA_FRONTMATTER = {
   'agent-memory': { type: 'skill', extra: { 'user-invocable': false } },
   'recall':       { type: 'skill', extra: { 'user-invocable': false } },
   'remember':     { type: 'skill', extra: { 'argument-hint': '"[保存したいメモや情報]"' } },
-  'pr':           { type: 'skill', extra: { 'disable-model-invocation': true, 'allowed-tools': 'Bash(gh *), Bash(git *)' } },
-  'skill-auditor': { type: 'skill', extra: { 'disable-model-invocation': true } },
   // Agents
   'developer':         { type: 'agent', extra: { tools: 'Bash, Read, Write, Edit, Grep, Glob', maxTurns: 20 } },
   'tester':            { type: 'agent', extra: { tools: 'Bash, Read, Write, Edit, Grep, Glob', maxTurns: 15 } },
   'reviewer':          { type: 'agent', extra: { tools: 'Bash, Read, Grep, Glob', maxTurns: 15 } },
   'planner':           { type: 'agent', extra: { tools: 'Bash, Read, Grep, Glob', maxTurns: 15 } },
   'planner-frontend':  { type: 'agent', extra: { tools: 'Bash, Read, Grep, Glob', maxTurns: 15 } },
-  'pr-maker':          { type: 'agent', extra: { tools: 'Bash, Read, Grep, Glob', maxTurns: 8 } },
   'cross-reviewer':    { type: 'agent', extra: { tools: 'Bash, Read, Grep, Glob', maxTurns: 10 } },
   'address':           { type: 'agent', extra: { tools: 'Bash, Read, Write, Edit, Grep, Glob', maxTurns: 20 } },
 };
