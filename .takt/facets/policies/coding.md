@@ -1,35 +1,28 @@
 # Coding Policy
 
-## KISS Principle
-- Question the necessity of every technique before applying it
-- If a technique does not reduce bugs, do not enforce it
+## KISS
+- Question every technique; if it does not reduce bugs, drop it
 
-## Functional Programming
-- Methods should respect pure functions
-- Dynamic values (Time, etc.) are received as arguments, not held internally
+## Functional
+- Pure functions; take dynamic values (Time) as arguments, never hold them internally
 
-## DRY Principle with Abstraction
-- Apply DRY only when proper abstraction is achievable
-- If abstraction yields little benefit, allow duplication
-- Three similar lines of code is better than a premature abstraction
+## DRY
+- Apply DRY only with proper abstraction; otherwise allow duplication
+- Three similar lines beat a premature abstraction
 
-## Error Detection (Raw Data Now)
-- Fallbacks hide symptoms; they are unnecessary
-- Display raw data without unnecessary formatting
-- Never use fallback values (`?? 'unknown'`) for required data
-- Fail fast on errors; do not hide data flow
+## Raw Data Now
+- Fallbacks are unnecessary and hide symptoms; never use them (`?? 'unknown'`) for required data
+- Show raw data unformatted; fail fast, never hide data flow
 
 ## Comments
-- Write concise business use-case context that code cannot convey
-- Do not add comments for things self-evident from naming or tests
+- State business context code cannot convey; nothing self-evident from naming/tests
 
 ## Command Execution Safety (Headless)
-- The shell has no TTY and stdin is closed; every command must terminate on its own
-- Do not run watch mode, dev servers, REPLs, or interactive prompts that wait for input
-- Do not pipe a command without a guaranteed exit into `tail`/`head`/`less`; the pipe stays silent until upstream EOF and can hang indefinitely
-- Prefer narrowly-scoped, short-lived commands over broad ones
+- No TTY and stdin is closed; every command must terminate on its own
+- No watch mode, dev servers, REPLs, or prompts that wait for input
+- Never pipe a command without guaranteed exit into `tail`/`head`/`less`; it hangs until EOF
+- Prefer narrowly-scoped, short-lived commands
 
 ## Test Quality
-- Test targets' direct dependencies are not mocked
-- Mocks/stubs are used only for concerns outside the test's focus
-- Mock only what is outside the test's direct concern; minimize mocking
+- Never mock a test target's direct dependencies
+- Mock only outside the test's focus; minimize mocking

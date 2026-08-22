@@ -24,11 +24,13 @@ takt（TAKT Agent Koordination Topology）のカスタムワークフロー定�
 │   │   └── custom-ci-analyzer.md
 │   ├── policies/                    # ポリシー（RULES: 設計原則・制約）
 │   │   ├── design.md                # DDD, DbC, 目的駆動, カプセル化
-│   │   ├── coding.md                # KISS, 関数型, DRY, テスト品質
+│   │   ├── coding.md                # KISS, 関数型, DRY, headless 実行安全, テスト品質
 │   │   └── validation.md            # Tier 別検証チェックリスト
-│   └── knowledge/                   # ナレッジ（CONTEXT: 参照情報）
-│       ├── tdd.md                   # Red-Green-Refactor 手順
-│       └── tier-assessment.md       # 変更 Tier 判定基準
+│   ├── knowledge/                   # ナレッジ（CONTEXT: 参照情報）
+│   │   ├── tdd.md                   # Red-Green-Refactor 手順
+│   │   └── tier-assessment.md       # 変更 Tier 判定基準
+│   └── output-contracts/            # 出力契約（レポート構造の強制）
+│       └── ai-review.md             # format: ai-review の構造定義
 ├── config.yaml                      # [.gitignore] プロジェクト設定
 ├── reports/                         # [.gitignore] レポート出力先
 ├── runs/                            # [.gitignore] 実行ログ・セッション
@@ -121,8 +123,8 @@ takt -w plan -t "具体的なタスク"
 
 個別ファイル単位の symlink にしてはならない。takt 0.40.0 で導入された `assertAllowedPersonaPath` の `isPathSafe(realpathSync)` チェックは、persona ファイルの realpath が allowed base ディレクトリ（同じく realpath 解決される）の配下にあることを要求する。ファイル単位の symlink にすると realpath 解決後に親ディレクトリだけ base に残り、target は dotfiles 内の絶対パスへ飛ぶため `..` で始まる相対パスとなり reject される。
 
-- **ワークフロー YAML の変更後**: `takt prompt <workflow>` でプロンプト組み立てエラーがないことを確認
-- **ファセットの変更後**: 参照元のワークフローすべてで `takt prompt` を確認
+- **ワークフロー YAML の変更後**: `takt prompt <workflow>` で Phase 1 が組み立てられることを確認（Phase 3 の `reportContent is required` は常に出るので無視する）
+- **ファセットの変更後**: 参照元のワークフローすべてで `takt prompt <workflow> | grep -c TRUNCATED` が 0 であることを確認（policy / knowledge の 2000 文字予算超過の検出。「スキーマ上の注意点」参照）
 - **ワークフロー / ファセットの追加**: 既に `~/.takt/workflows`・`~/.takt/facets` がディレクトリ symlink のため、リポジトリ内にファイルを追加するだけで反映される。`install.sh` の更新は不要
 - **takt バージョンアップ後**: `TAKT_LOGGING_LEVEL=debug takt` で "Skipping invalid workflow file" が出ないことを確認。スキーマ変更により既存ワークフローが拒否される場合がある
 
@@ -137,6 +139,13 @@ takt -w plan -t "具体的なタスク"
   - パス参照化すると `{report:X}` が持つ存在・通常ファイル（symlink 拒否）検証と、resume snapshot / 親ワークフロー reports へのフォールバック探索は働かなくなる
 - v0.34.0 で terminology が変更: `movements` → `steps`, `max_movements` → `max_steps`, `initial_movement` → `initial_step`, `piece_config` → `workflow_config`（旧キーは後方互換エイリアスあり）
 - `quality_gates`（command 型）: ステップ完了後・遷移判定前に projectRoot を cwd としてシェル実行され、非 0 終了で同ステップを Phase 1 から再実行する（max_steps を消費）。**遷移判定より前に走るため ABORT 遷移もゲート失敗で塞がれる**（ABORT する場合も成果物を書くよう instruction 側で担保する）。環境変数は PATH 等の最小 allowlist のみで `{report_dir}` 等のテンプレート変数は展開されない。失敗ログは `.takt/quality-gates/logs/` に出力される。**グローバル config（`~/.takt/config.yaml`）の `workflow_command_gates.custom_scripts: true` が必須**（未設定だとロード時に拒否される）
+- **policy / knowledge / previous_response は結合後 2000 文字で前方トリムされる**（`InstructionBuilder.js:19` の `CONTEXT_MAX_CHARS`、切り詰めは `faceted-prompting/dist/truncation.js:14-20` の `slice(0, maxChars)`）。`policy: [a, b]` の場合は各ファイルを `\n\n---\n\n`（7 文字）で結合した**全体**が対象なので、組み合わせごとの合計文字数を予算として管理する。instruction と persona はトリム対象外
+  - 検出方法: 切り詰めが起きると合成プロンプトに `...TRUNCATED...` マーカーが入るため、**`takt prompt <workflow> | grep -c TRUNCATED` が 0 であることを確認する**（`truncation.js:19`）。実行時に届いたかを直接見るなら run のセッションログ（`~/.claude/projects/<cwd の slug>/*.jsonl`）を節見出しで grep する
+  - なお `takt prompt` は Phase 3 で必ず `[ERROR] reportContent is required for report-based judgment` を出す（プレビューには実レポートが存在しないため）。これは変更の有無に関わらず出るので、ファセット変更の可否判断には使えない。Phase 1 の出力内容と `TRUNCATED` の有無で判断する
+  - 実績: `policy: [design, coding]` が 2,846 文字あり、これを使う 32 ステップすべてで末尾 846 文字が捨てられていた（`Comments` / `Command Execution Safety (Headless)` / `Test Quality` が全欠落、`Raw Data Now` が途中切断）。障害 run のセッションログで `Command Execution Safety` の出現が 0 件だったことで確認。2026-08-23 に両ファイルを圧縮し 1,980 文字（余白 20）に収めた。**余白が小さいのでルールを追加する際は必ず合計を測る**
+  - `knowledge` は別枠の 2000 文字予算（`tdd.md` 1,219 / `tier-assessment.md` 458）。ただし `policy: [design, coding]` の 32 ステップのうち `knowledge` を宣言しているのは 8 ステップだけで、残り 24（review / meta-review / fix-review 系すべて）は未宣言。policy の予算超過を knowledge へ逃がすことはできない
+- **ユーザー階層の `~/.claude/CLAUDE.md` は takt 実行時に読まれない**。takt は `--system-prompt` で既定のシステムプロンプトを置換するため user memory が載らない（セッションログで CLAUDE.md 固有語が 0 件であることを確認済み）。設計規範は必ずファセット側に置く
+- Phase 2（レポート生成）は Phase 1 とは別の CLI 呼び出しで、instruction に policy / knowledge が入らない（`ReportInstructionBuilder.js` に参照なし）。レポートの構造や分量を縛るなら `output_contracts` 側で行う
 
 ## plan / plan-implement のプラン本文契約
 

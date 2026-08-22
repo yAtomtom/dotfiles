@@ -1,28 +1,25 @@
 # Design Policy
 
-## DDD (Domain-Driven Design)
-- Identify the core domain and invest development effort there
-- Isolate logic per bounded context
-- Verify alignment with existing bounded contexts before proposing changes
+## DDD
+- Identify the core domain and invest effort there; isolate logic per bounded context
+- Verify alignment with existing bounded contexts before changing
 
-## Design by Contract (DbC)
-- Define preconditions, postconditions, and invariants (class invariants, loop invariants)
-- Make contracts explicit in design and implementation
+## Design by Contract
+- Define pre/postconditions and invariants (class and loop)
+- Make contracts explicit in design and code
 
-## Purpose-Driven Programming
-- Purpose (desired state), target (spec/constraints), and means (code) must be 1:1:1
-- Never determine means before purpose is decided
-- Each purpose maps to exactly one means
+## Purpose-Driven
+- Purpose (desired state), target (spec/constraints), means (code) are 1:1:1
+- Never decide means before purpose; one purpose, one means
 
-## Interface and Implementation Separation
-- Interfaces must be separated from implementation
-- Interfaces accept only the arguments they genuinely need
-- Logging/notification timestamps and user info are absorbed by upper layers
+## Interfaces
+- Separate interfaces from implementation; take only needed arguments
+- Upper layers absorb logging/notification time and user info
 
-## Encapsulation and Separation of Concerns
-- Encapsulation means bundling data with its operating logic, not defining getters/setters
-- Use encapsulation and separation of concerns as the criteria for modularity decisions
+## Encapsulation
+- Encapsulation bundles data with its logic, not getters/setters
+- Judge modularity by encapsulation and separation of concerns
 
-## Immutable Design
-- Complete Constructor: all instance variables initialized at creation, no subsequent mutation
-- Objects whose values are determined at creation (results, outputs, diffs, config schemas) enforce immutability via language mechanisms
+## Immutability
+- Complete Constructor: all instance variables set at creation, never mutated
+- Values fixed at creation (results, outputs, diffs, config) enforce immutability via language
