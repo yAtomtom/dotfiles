@@ -39,11 +39,14 @@ steps:
       以下のタスクについて設計を行ってください。
       1. プロジェクトの関連ファイルを読み込み、現状の設計を把握する
       2. 設計方針に基づいて設計案を作成する
-      3. 設計案の本文（成果物の正本）を {report_dir}/plan-document.md に Write ツールで書き出す
+      3. 設計案の本文（成果物の正本）を {report_dir}/plan-document.md に書き出す
+         - 新規作成時は Write ツールを使う。既に正常な plan-document.md がある再入時（差し戻し・
+           quality gate 失敗による再実行）は Read して該当箇所のみ Edit ツールで修正し、全文 Write は
+           行わない（全文 Write は stdout バッファ超過で run を落とす）。欠損・破損時のみ Write で再作成する
          - 1行目は「# Plan: <タスク名>」の見出しにする
          - 本文に「## 」セクションを1つ以上含める
          - 最終行は「<!-- END OF PLAN -->」のみとする
-         - 全体を 131072 バイト以内に収める（超過すると quality gate で差し戻される）
+         - 全体を 262144 バイト以内に収める（超過すると quality gate で差し戻される）
          - このファイル以外のファイルを作成・変更してはならない（プロジェクトのソースは読み取りのみ）
          - 要件が不明確で ABORT する場合も、不明点を記録した plan-document.md を同じ形式で書き出すこと
       4. quality gate 失敗で再実行された場合は、Previous Response の「Output log」のパスを Read して
@@ -66,8 +69,10 @@ steps:
           grep -q '^## ' "$f" || { echo "no '## ' section found: $f"; exit 1; }
           tail -n 1 "$f" | grep -qx '<!-- END OF PLAN -->' || { echo "missing end marker: $f"; exit 1; }
           size=$(wc -c < "$f")
+          # 262144 = takt の MAX_RUN_REPORT_BYTES。超過すると resume の run 読み取りが throw する
+          limit=262144
           [ "$size" -ge 1000 ] || { echo "plan document too small ($size bytes): $f"; exit 1; }
-          [ "$size" -le 131072 ] || { echo "plan document too large ($size bytes, limit 131072): $f"; exit 1; }
+          [ "$size" -le "$limit" ] || { echo "plan document too large ($size bytes, limit $limit): $f"; exit 1; }
     rules:
       - condition: 設計案が作成された
         next: review-design
@@ -140,7 +145,7 @@ steps:
          - 全文の書き直しは禁止。既存ファイルへの部分編集のみ行う
          - 例外: plan-document.md が存在しない・破損している場合のみ、00-plan.md とレビュー結果と
            プロジェクトの読解に基づき Write ツールで全文を再作成する（復旧不能ループの防止）
-         - 修正後の全体を 131072 バイト以内に収める。編集後に `wc -c` で実サイズを確認すること
+         - 修正後の全体を 262144 バイト以内に収める。編集後に `wc -c` で実サイズを確認すること
            （このステップにはゲート失敗の理由が渡らないため、自己検証が収束の唯一の担保）
          - 上限を超える場合に限り、重複記述の統合と冗長な引用の削除による圧縮を行う。
            この圧縮に限り「部分編集のみ」の制約を超える書き換えを許可する（非収束ループの防止）
@@ -163,8 +168,10 @@ steps:
           grep -q '^## ' "$f" || { echo "no '## ' section found: $f"; exit 1; }
           tail -n 1 "$f" | grep -qx '<!-- END OF PLAN -->' || { echo "missing end marker: $f"; exit 1; }
           size=$(wc -c < "$f")
+          # 262144 = takt の MAX_RUN_REPORT_BYTES。超過すると resume の run 読み取りが throw する
+          limit=262144
           [ "$size" -ge 1000 ] || { echo "plan document too small ($size bytes): $f"; exit 1; }
-          [ "$size" -le 131072 ] || { echo "plan document too large ($size bytes, limit 131072): $f"; exit 1; }
+          [ "$size" -le "$limit" ] || { echo "plan document too large ($size bytes, limit $limit): $f"; exit 1; }
     rules:
       - condition: 修正完了
         next: review-design

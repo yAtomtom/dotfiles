@@ -95,7 +95,10 @@ takt -w plan -c
 ## ワークフローの動作検証
 
 ```bash
-# 1. プロンプト組み立て確認
+# 1. プロンプト組み立て確認（ステップの instruction 展開を確認する）
+# 注意: takt 0.59.1 では Phase 3 の judge プレビューが `reportContent is required for report-based judgment`
+#       で必ず exit 1 になる（未変更のワークフローでも同様）。終了コードは合否の判定に使えないので、
+#       Phase 1 / 2 の出力が意図した instruction を含んでいるかを本文で確認する。
 takt prompt <workflow>
 
 # 2. mock でフロー遷移確認（API 消費なし）
@@ -137,14 +140,14 @@ takt -w plan -t "具体的なタスク"
 
 ## plan / plan-implement のプラン本文契約
 
-設計成果物の正本は `{report_dir}/plan-document.md`。planner ステップ（design / fix / fix-design）が `edit: true` + `required_permission_mode: edit` で Write/Edit ツールにより直接書く。`00-plan.md`（`format: plan` の Phase 2 レポート）は補助的なタスク計画サマリであり正本ではない。
+設計成果物の正本は `{report_dir}/plan-document.md`。planner ステップ（design / fix / fix-design）が `edit: true` + `required_permission_mode: edit` で Write/Edit ツールにより直接書く。全文 Write は新規作成と欠損・破損時の再作成に限り、再入時（差し戻し・ゲート失敗）は差分編集する（全文 Write は stdout バッファ超過で run を落とす）。`00-plan.md`（`format: plan` の Phase 2 レポート）は補助的なタスク計画サマリであり正本ではない。
 
 契約（design / fix の command quality gate `plan-document-complete` が機械検証する）:
 
 - 1 行目が `# ` 見出し（先頭欠け検出）
 - `## ` セクションが 1 つ以上
 - 最終行が `<!-- END OF PLAN -->` のみ（末尾切れ検出）
-- 1000 バイト以上 131072 バイト以下（上限は `MAX_ARG_STRLEN` に合わせた成果物サイズの天井）
+- 1000 バイト以上 262144 バイト以下（上限は takt 自身の per-file 上限 `MAX_RUN_REPORT_BYTES` = 256 KiB。`runSessionReader.js` が `stats.size > MAX_RUN_REPORT_BYTES` で throw するため、超過すると `takt resume` の run 読み取りが落ちる）
 
 背景: 成果物を「応答本文そのもの」とする旧方式は、応答がモデル出力上限で複数メッセージに分割された際に takt が最後の 1 通のみを採用し、成果物が断片化する障害を起こした（tt-image-viewer run `20260816-140920`）。ファイル直接書き込み + 機械ゲートにより、応答長と成果物サイズを分離している。
 
@@ -155,9 +158,11 @@ takt -w plan -t "具体的なタスク"
 - ゲート失敗ログ `.takt/quality-gates/logs/` は**ワークフローを実行したリポジトリ側**に作られる。実行先リポジトリの `.gitignore` で `.takt/` 配下が ignore されていることを確認すること
 - planner ステップの「plan-document.md 以外を変更しない」（ソース read-only）は instruction による指示であり、ゲートでは機械検証していない。dirty tree での偽陽性なしに検証できる手段が takt にないため、レビュー工程（cross-review / supervise）での検出に委ねる
 - consumer 側（plan の supervise / plan-implement の approve-design）は `{report_dir}/plan-document.md` のパス参照で本文を読む。`{report:plan-document.md}` によるインライン展開は使わない（文書が 131 KB を超えると `spawn E2BIG` で run が落ちる。tt-image-viewer run `20260822-045044`）。完全性の機械検証は producer 側（design / fix / fix-design）の `plan-document-complete` ゲートに委譲している
+- **`MAX_ARG_STRLEN` は plan-document.md には効かない**。全ワークフローで `{report:plan-document.md}` は使っておらず（`{report:` はレビュー結果のみ）、通常の instruction 経路では本文がプロンプトへ展開されない。argv 長が問題になるのは下記 Retry / Instruct の system prompt 経路だけで、そこで効くのは単体サイズではなく `reports/` 合計サイズである。したがって成果物のサイズ上限を `MAX_ARG_STRLEN` から導出してはならない
 - resume は新しい run slug を作るが、`inheritResumeReportSnapshot` が source run の `reports/` を新 run へ物理コピーして継承する（公開は単一 rename）。したがってパス参照でも `{report_dir}/plan-document.md` は解決できる
 - **`takt resume` で選ぶアクションは Requeue にする**。Retry / Instruct は対話アシスタントを起動し、その system prompt に `reports/` 直下の `*.md` 全文を埋め込む（`runSessionReader.js` の `formatRunSessionForPrompt`。上限は 1 ファイル 256 KB のみで合計上限がない）。headless CLI は `--system-prompt` も単一 argv 要素で渡すため、reports 合計が 131,072 バイトを超えると最初のメッセージ送信時に `spawn E2BIG` で落ちる。Requeue は対話を経ず `startStep` から再実行するのでこの経路を踏まない
-- **サイズ上限 131072 は plan-document.md 単体の制約であり、Retry / Instruct の E2BIG は防げない**。上記の通り危険なのは `reports/` 直下の `*.md` の合計サイズで、`00-plan.md` やレビュー結果も加算される（run `20260822-091144` の実測は合計 255,338 バイト）。Retry / Instruct を避ける運用は上限追加後も維持する
-- **サイズ上限ゲートは stdout バッファ超過障害を検知できない**。`WorkflowRunLoop.js` は `response.status === 'error'` を `runQualityGates` より前に評価して abort するため、`Claude CLI stdout exceeded buffer limit`（`headless-spawn.js` の 10 MiB ハードコード上限、設定変更不可・takt 0.60.0 でも未修正）が起きた回はゲートが一度も走らない。上限は成果物の無制限な成長を抑える**予防的措置**であり、障害の検知・復旧手段ではない
+- **サイズ上限 262144 は plan-document.md 単体の制約であり、Retry / Instruct の E2BIG は防げない**。上記の通り危険なのは `reports/` 直下の `*.md` の合計サイズで、`00-plan.md` やレビュー結果も加算される（run `20260822-091144` の実測は合計 255,338 バイト）。`MAX_ARG_STRLEN` を満たす合計サイズのゲートは成立しないため、Retry / Instruct を避ける運用で担保する
+- **サイズ上限ゲートは stdout バッファ超過障害を検知できない**。`WorkflowRunLoop.js` は `response.status === 'error'` を `runQualityGates` より前に評価して abort するため、`Claude CLI stdout exceeded buffer limit`（`headless-spawn.js` の 10 MiB ハードコード上限、設定変更不可・takt 0.60.0 でも未修正）が起きた回はゲートが一度も走らない。上限が担保するのは takt 自身の per-file 上限（`MAX_RUN_REPORT_BYTES`）への適合だけであり、障害の検知・復旧手段ではない
 - **ゲート失敗の理由が届くのは `pass_previous_response` が有効なステップだけ**。既定は `true`（`workflowStepNormalizer.js` の `?? true`）なので design には「Previous Response」として自動注入されるが、`fix` / `fix-design` は `pass_previous_response: false` を明示しているため届かない（`{previous_response}` を instruction に書いても `passPreviousResponse` が false だと置換されない）。このため両ステップは instruction に上限値を明記し、`wc -c` による自己検証のため `allowed_tools` に `Bash` を追加してある。**`pass_previous_response: false` を維持する限りこの自己検証が収束の唯一の担保**
 - ゲート失敗メッセージ（`formatCommandGateFailure`）は stdout 本文を含まず `Output log:` のパスのみを渡す。ただし `Command:` 行にゲートスクリプト全文が入るため、上限値そのものはエージェントから見える。実測バイト数を使わせたい場合は Output log を Read させる（design の instruction がそうしている）
+- **実測バイト数を成果物本文に記録させない**。plan-document.md 内に自身のバイト数を書くと自己参照になり、以降のバイト中立でない編集が必ずその記録を壊す。検証節に構造の実測を残す場合も行数・見出し数までにとどめる（tt-image-viewer run `20260822-124704` で実際に発生し、fix ループの収束を妨げた）
