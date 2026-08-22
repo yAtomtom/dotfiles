@@ -27,6 +27,7 @@ takt（TAKT Agent Koordination Topology）のカスタムワークフロー定�
 │   │   ├── coding.md                # KISS, 関数型, DRY, headless 実行安全, テスト品質
 │   │   └── validation.md            # Tier 別検証チェックリスト
 │   ├── knowledge/                   # ナレッジ（CONTEXT: 参照情報）
+│   │   ├── output-volume.md         # stdout 予算を食い潰さない出力の作り方
 │   │   ├── tdd.md                   # Red-Green-Refactor 手順
 │   │   └── tier-assessment.md       # 変更 Tier 判定基準
 │   └── output-contracts/            # 出力契約（レポート構造の強制）
@@ -126,6 +127,7 @@ takt -w plan -t "具体的なタスク"
 - **ワークフロー YAML の変更後**: `takt prompt <workflow>` で Phase 1 が組み立てられることを確認（Phase 3 の `reportContent is required` は常に出るので無視する）
 - **ファセットの変更後**: 参照元のワークフローすべてで `takt prompt <workflow> | grep -c TRUNCATED` が 0 であることを確認（policy / knowledge の 2000 文字予算超過の検出。「スキーマ上の注意点」参照）
 - **ワークフロー / ファセットの追加**: 既に `~/.takt/workflows`・`~/.takt/facets` がディレクトリ symlink のため、リポジトリ内にファイルを追加するだけで反映される。`install.sh` の更新は不要
+- **ファセットの追加**: ファイルを置くだけでは届かない。ワークフロー YAML の `policies:` / `knowledge:` マップへの登録と、**届けたいステップすべての `policy:` / `knowledge:` への列挙**の両方が必要（未宣言のステップには入らない）。全ステップに入れる場合は cross-review の parallel substep と copilot substep も対象
 - **takt バージョンアップ後**: `TAKT_LOGGING_LEVEL=debug takt` で "Skipping invalid workflow file" が出ないことを確認。スキーマ変更により既存ワークフローが拒否される場合がある
 
 ## スキーマ上の注意点
@@ -143,7 +145,8 @@ takt -w plan -t "具体的なタスク"
   - 検出方法: 切り詰めが起きると合成プロンプトに `...TRUNCATED...` マーカーが入るため、**`takt prompt <workflow> | grep -c TRUNCATED` が 0 であることを確認する**（`truncation.js:19`）。実行時に届いたかを直接見るなら run のセッションログ（`~/.claude/projects/<cwd の slug>/*.jsonl`）を節見出しで grep する
   - なお `takt prompt` は Phase 3 で必ず `[ERROR] reportContent is required for report-based judgment` を出す（プレビューには実レポートが存在しないため）。これは変更の有無に関わらず出るので、ファセット変更の可否判断には使えない。Phase 1 の出力内容と `TRUNCATED` の有無で判断する
   - 実績: `policy: [design, coding]` が 2,846 文字あり、これを使う 32 ステップすべてで末尾 846 文字が捨てられていた（`Comments` / `Command Execution Safety (Headless)` / `Test Quality` が全欠落、`Raw Data Now` が途中切断）。障害 run のセッションログで `Command Execution Safety` の出現が 0 件だったことで確認。2026-08-23 に両ファイルを圧縮し 1,980 文字（余白 20）に収めた。**余白が小さいのでルールを追加する際は必ず合計を測る**
-  - `knowledge` は別枠の 2000 文字予算（`tdd.md` 1,219 / `tier-assessment.md` 458）。ただし `policy: [design, coding]` の 32 ステップのうち `knowledge` を宣言しているのは 8 ステップだけで、残り 24（review / meta-review / fix-review 系すべて）は未宣言。policy の予算超過を knowledge へ逃がすことはできない
+  - `knowledge` は別枠の 2000 文字予算（`output-volume.md` 431 / `tdd.md` 1,219 / `tier-assessment.md` 458。最大の組み合わせ `[output-volume, tdd]` が 1,657 で余白 343）
+  - policy の予算が尽きたルールは knowledge へ逃がせるが、**逃がし先のステップすべてで `knowledge:` を宣言しないと、未宣言のステップでは完全に失われる**。`output-volume` は実行規範なので本来 policy が自然だが policy に余白がないため knowledge に置いており、2026-08-23 に全 46 エージェントステップへ宣言した（`plan` / `implement` / `review-*` / `fix-*` / `plan-implement` の全ステップ、cross-review の parallel substep と copilot substep を含む）。**前方トリムで先頭が生き残るので `knowledge:` のリストは `output-volume` を先頭に置く**
 - **ユーザー階層の `~/.claude/CLAUDE.md` は takt 実行時に読まれない**。takt は `--system-prompt` で既定のシステムプロンプトを置換するため user memory が載らない（セッションログで CLAUDE.md 固有語が 0 件であることを確認済み）。設計規範は必ずファセット側に置く
 - Phase 2（レポート生成）は Phase 1 とは別の CLI 呼び出しで、instruction に policy / knowledge が入らない（`ReportInstructionBuilder.js` に参照なし）。レポートの構造や分量を縛るなら `output_contracts` 側で行う
 

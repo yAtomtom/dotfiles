@@ -17,6 +17,7 @@ policies:
   coding: ../facets/policies/coding.md
   validation: ../facets/policies/validation.md
 knowledge:
+  output-volume: ../facets/knowledge/output-volume.md
   tdd: ../facets/knowledge/tdd.md
   tier-assessment: ../facets/knowledge/tier-assessment.md
 
@@ -24,7 +25,7 @@ steps:
   - name: implement
     persona: custom-coder
     policy: [design, coding]
-    knowledge: tdd
+    knowledge: [output-volume, tdd]
     edit: true
     required_permission_mode: edit
     provider_options:
@@ -57,6 +58,7 @@ steps:
       - name: claude-review
         persona: custom-reviewer
         policy: [design, coding]
+        knowledge: output-volume
         edit: false
         provider_options:
           claude:
@@ -75,6 +77,7 @@ steps:
       - name: copilot-review
         persona: custom-reviewer
         policy: [design, coding]
+        knowledge: output-volume
         provider: copilot
         model: gpt-5.5
         edit: false
@@ -98,7 +101,7 @@ steps:
   - name: fix
     persona: custom-coder
     policy: [design, coding]
-    knowledge: tdd
+    knowledge: [output-volume, tdd]
     edit: true
     required_permission_mode: edit
     session: refresh
@@ -125,7 +128,7 @@ steps:
   - name: supervise
     persona: custom-supervisor
     policy: validation
-    knowledge: tier-assessment
+    knowledge: [output-volume, tier-assessment]
     edit: true
     required_permission_mode: edit
     session: refresh

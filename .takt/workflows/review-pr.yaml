@@ -16,12 +16,14 @@ policies:
   coding: ../facets/policies/coding.md
   validation: ../facets/policies/validation.md
 knowledge:
+  output-volume: ../facets/knowledge/output-volume.md
   tier-assessment: ../facets/knowledge/tier-assessment.md
 
 steps:
   - name: review-pr
     persona: custom-reviewer
     policy: [design, coding]
+    knowledge: output-volume
     edit: false
     provider_options:
       claude:
@@ -48,6 +50,7 @@ steps:
       - name: claude-meta-review
         persona: custom-reviewer
         policy: [design, coding]
+        knowledge: output-volume
         edit: false
         provider_options:
           claude:
@@ -66,6 +69,7 @@ steps:
       - name: copilot-meta-review
         persona: custom-reviewer
         policy: [design, coding]
+        knowledge: output-volume
         provider: copilot
         model: gpt-5.5
         edit: false
@@ -89,6 +93,7 @@ steps:
   - name: fix-review
     persona: custom-reviewer
     policy: [design, coding]
+    knowledge: output-volume
     edit: false
     session: refresh
     pass_previous_response: false
@@ -111,7 +116,7 @@ steps:
   - name: supervise
     persona: custom-supervisor
     policy: validation
-    knowledge: tier-assessment
+    knowledge: [output-volume, tier-assessment]
     edit: false
     session: refresh
     pass_previous_response: false
