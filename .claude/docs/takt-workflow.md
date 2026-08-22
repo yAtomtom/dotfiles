@@ -129,6 +129,9 @@ takt -w plan -t "具体的なタスク"
 - copilot サブステップには `allowed_tools` を書かない（copilot プロバイダーのスキーマに存在しない）
 - `output_contracts.report` の各エントリには `format` フィールドが必須。ビルトインフォーマットは `takt catalog output-contracts` で確認
 - `loop_monitors` の judge `instruction` には `{report:filename}` テンプレート変数でレポート参照が必須
+- `{report:filename}` は**レポート本文をプロンプトへインライン展開する**（`{report_dir}/filename` は単なるパス文字列で展開しない）。`provider: claude`（headless CLI）はプロンプト全文を単一の argv 要素で渡すため、展開後が Linux の `MAX_ARG_STRLEN` = 131,072 バイトを超えると `spawn E2BIG` で即死する（`ARG_MAX` の 2 MB とは別の、引数 1 個あたりの上限）。**サイズが成果物依存で増えるレポートには使わず、パス参照にしてエージェントに部分読みさせる**
+  - `takt prompt` では検出できない。preview は `validateReportReferences: false` で走り `{report:X}` をパス文字列に置換するため、展開の有無が見えない。実サイズは run の `logs/*.jsonl` の `step_start` イベントの `instruction` で測る
+  - パス参照化すると `{report:X}` が持つ存在・通常ファイル（symlink 拒否）検証と、resume snapshot / 親ワークフロー reports へのフォールバック探索は働かなくなる
 - v0.34.0 で terminology が変更: `movements` → `steps`, `max_movements` → `max_steps`, `initial_movement` → `initial_step`, `piece_config` → `workflow_config`（旧キーは後方互換エイリアスあり）
 - `quality_gates`（command 型）: ステップ完了後・遷移判定前に projectRoot を cwd としてシェル実行され、非 0 終了で同ステップを Phase 1 から再実行する（max_steps を消費）。**遷移判定より前に走るため ABORT 遷移もゲート失敗で塞がれる**（ABORT する場合も成果物を書くよう instruction 側で担保する）。環境変数は PATH 等の最小 allowlist のみで `{report_dir}` 等のテンプレート変数は展開されない。失敗ログは `.takt/quality-gates/logs/` に出力される。**グローバル config（`~/.takt/config.yaml`）の `workflow_command_gates.custom_scripts: true` が必須**（未設定だとロード時に拒否される）
 
@@ -141,7 +144,7 @@ takt -w plan -t "具体的なタスク"
 - 1 行目が `# ` 見出し（先頭欠け検出）
 - `## ` セクションが 1 つ以上
 - 最終行が `<!-- END OF PLAN -->` のみ（末尾切れ検出）
-- 1000 バイト以上
+- 1000 バイト以上 131072 バイト以下（上限は `MAX_ARG_STRLEN` に合わせた成果物サイズの天井）
 
 背景: 成果物を「応答本文そのもの」とする旧方式は、応答がモデル出力上限で複数メッセージに分割された際に takt が最後の 1 通のみを採用し、成果物が断片化する障害を起こした（tt-image-viewer run `20260816-140920`）。ファイル直接書き込み + 機械ゲートにより、応答長と成果物サイズを分離している。
 
@@ -151,3 +154,10 @@ takt -w plan -t "具体的なタスク"
 
 - ゲート失敗ログ `.takt/quality-gates/logs/` は**ワークフローを実行したリポジトリ側**に作られる。実行先リポジトリの `.gitignore` で `.takt/` 配下が ignore されていることを確認すること
 - planner ステップの「plan-document.md 以外を変更しない」（ソース read-only）は instruction による指示であり、ゲートでは機械検証していない。dirty tree での偽陽性なしに検証できる手段が takt にないため、レビュー工程（cross-review / supervise）での検出に委ねる
+- consumer 側（plan の supervise / plan-implement の approve-design）は `{report_dir}/plan-document.md` のパス参照で本文を読む。`{report:plan-document.md}` によるインライン展開は使わない（文書が 131 KB を超えると `spawn E2BIG` で run が落ちる。tt-image-viewer run `20260822-045044`）。完全性の機械検証は producer 側（design / fix / fix-design）の `plan-document-complete` ゲートに委譲している
+- resume は新しい run slug を作るが、`inheritResumeReportSnapshot` が source run の `reports/` を新 run へ物理コピーして継承する（公開は単一 rename）。したがってパス参照でも `{report_dir}/plan-document.md` は解決できる
+- **`takt resume` で選ぶアクションは Requeue にする**。Retry / Instruct は対話アシスタントを起動し、その system prompt に `reports/` 直下の `*.md` 全文を埋め込む（`runSessionReader.js` の `formatRunSessionForPrompt`。上限は 1 ファイル 256 KB のみで合計上限がない）。headless CLI は `--system-prompt` も単一 argv 要素で渡すため、reports 合計が 131,072 バイトを超えると最初のメッセージ送信時に `spawn E2BIG` で落ちる。Requeue は対話を経ず `startStep` から再実行するのでこの経路を踏まない
+- **サイズ上限 131072 は plan-document.md 単体の制約であり、Retry / Instruct の E2BIG は防げない**。上記の通り危険なのは `reports/` 直下の `*.md` の合計サイズで、`00-plan.md` やレビュー結果も加算される（run `20260822-091144` の実測は合計 255,338 バイト）。Retry / Instruct を避ける運用は上限追加後も維持する
+- **サイズ上限ゲートは stdout バッファ超過障害を検知できない**。`WorkflowRunLoop.js` は `response.status === 'error'` を `runQualityGates` より前に評価して abort するため、`Claude CLI stdout exceeded buffer limit`（`headless-spawn.js` の 10 MiB ハードコード上限、設定変更不可・takt 0.60.0 でも未修正）が起きた回はゲートが一度も走らない。上限は成果物の無制限な成長を抑える**予防的措置**であり、障害の検知・復旧手段ではない
+- **ゲート失敗の理由が届くのは `pass_previous_response` が有効なステップだけ**。既定は `true`（`workflowStepNormalizer.js` の `?? true`）なので design には「Previous Response」として自動注入されるが、`fix` / `fix-design` は `pass_previous_response: false` を明示しているため届かない（`{previous_response}` を instruction に書いても `passPreviousResponse` が false だと置換されない）。このため両ステップは instruction に上限値を明記し、`wc -c` による自己検証のため `allowed_tools` に `Bash` を追加してある。**`pass_previous_response: false` を維持する限りこの自己検証が収束の唯一の担保**
+- ゲート失敗メッセージ（`formatCommandGateFailure`）は stdout 本文を含まず `Output log:` のパスのみを渡す。ただし `Command:` 行にゲートスクリプト全文が入るため、上限値そのものはエージェントから見える。実測バイト数を使わせたい場合は Output log を Read させる（design の instruction がそうしている）

@@ -43,8 +43,11 @@ steps:
          - 1行目は「# Plan: <タスク名>」の見出しにする
          - 本文に「## 」セクションを1つ以上含める
          - 最終行は「<!-- END OF PLAN -->」のみとする
+         - 全体を 131072 バイト以内に収める（超過すると quality gate で差し戻される）
          - このファイル以外のファイルを作成・変更してはならない（プロジェクトのソースは読み取りのみ）
          - 要件が不明確で ABORT する場合も、不明点を記録した plan-document.md を同じ形式で書き出すこと
+      4. quality gate 失敗で再実行された場合は、Previous Response の「Output log」のパスを Read して
+         失敗理由を確認してから修正する（失敗メッセージ本文は Previous Response に含まれない）
       応答本文には設計の要約のみを記載し、プラン全文を再掲しないこと。
       Task: {task}
     # 成果物欠損の機械検証。応答分割等でプラン本文が壊れた場合にステップを再実行させる
@@ -62,7 +65,9 @@ steps:
           head -n 1 "$f" | grep -q '^# ' || { echo "first line must be '# ' heading: $f"; exit 1; }
           grep -q '^## ' "$f" || { echo "no '## ' section found: $f"; exit 1; }
           tail -n 1 "$f" | grep -qx '<!-- END OF PLAN -->' || { echo "missing end marker: $f"; exit 1; }
-          [ "$(wc -c < "$f")" -ge 1000 ] || { echo "plan document too small: $f"; exit 1; }
+          size=$(wc -c < "$f")
+          [ "$size" -ge 1000 ] || { echo "plan document too small ($size bytes): $f"; exit 1; }
+          [ "$size" -le 131072 ] || { echo "plan document too large ($size bytes, limit 131072): $f"; exit 1; }
     rules:
       - condition: 設計案が作成された
         next: review-design
@@ -123,7 +128,7 @@ steps:
     pass_previous_response: false
     provider_options:
       claude:
-        allowed_tools: [Read, Glob, Grep, Edit, Write]
+        allowed_tools: [Read, Glob, Grep, Edit, Write, Bash]
     output_contracts:
       report:
         - name: 00-plan.md
@@ -135,6 +140,10 @@ steps:
          - 全文の書き直しは禁止。既存ファイルへの部分編集のみ行う
          - 例外: plan-document.md が存在しない・破損している場合のみ、00-plan.md とレビュー結果と
            プロジェクトの読解に基づき Write ツールで全文を再作成する（復旧不能ループの防止）
+         - 修正後の全体を 131072 バイト以内に収める。編集後に `wc -c` で実サイズを確認すること
+           （このステップにはゲート失敗の理由が渡らないため、自己検証が収束の唯一の担保）
+         - 上限を超える場合に限り、重複記述の統合と冗長な引用の削除による圧縮を行う。
+           この圧縮に限り「部分編集のみ」の制約を超える書き換えを許可する（非収束ループの防止）
          - 先頭の「# Plan:」見出しと最終行の「<!-- END OF PLAN -->」を維持する
          - このファイル以外のファイルを作成・変更してはならない
       3. 応答本文には修正内容の要約のみを記載する（プラン全文を応答に再掲しない）
@@ -153,7 +162,9 @@ steps:
           head -n 1 "$f" | grep -q '^# ' || { echo "first line must be '# ' heading: $f"; exit 1; }
           grep -q '^## ' "$f" || { echo "no '## ' section found: $f"; exit 1; }
           tail -n 1 "$f" | grep -qx '<!-- END OF PLAN -->' || { echo "missing end marker: $f"; exit 1; }
-          [ "$(wc -c < "$f")" -ge 1000 ] || { echo "plan document too small: $f"; exit 1; }
+          size=$(wc -c < "$f")
+          [ "$size" -ge 1000 ] || { echo "plan document too small ($size bytes): $f"; exit 1; }
+          [ "$size" -le 131072 ] || { echo "plan document too large ($size bytes, limit 131072): $f"; exit 1; }
     rules:
       - condition: 修正完了
         next: review-design
@@ -176,7 +187,8 @@ steps:
           format: supervisor-validation
     instruction: |
       設計の最終検証を行ってください。
-      1. 設計案本文（成果物の正本） {report:plan-document.md} を確認する
+      1. 設計案本文（成果物の正本） {report_dir}/plan-document.md を確認する
+         - Read の offset/limit や Grep で冒頭・末尾・見出し構造を確認する（全文を一度に読む必要はない）
          - ファイルが欠損している、先頭が「# Plan:」見出しでない、最終行が「<!-- END OF PLAN -->」でない場合は
            成果物欠損として差し戻すこと
       2. レポートディレクトリ {report_dir} 内のレビュー結果と 00-plan.md（補助のタスク計画サマリ）を確認する
