@@ -150,6 +150,15 @@ takt -w plan -t "具体的なタスク"
 - **ユーザー階層の `~/.claude/CLAUDE.md` は takt 実行時に読まれない**。takt は `--system-prompt` で既定のシステムプロンプトを置換するため user memory が載らない（セッションログで CLAUDE.md 固有語が 0 件であることを確認済み）。設計規範は必ずファセット側に置く
 - Phase 2（レポート生成）は Phase 1 とは別の CLI 呼び出しで、instruction に policy / knowledge が入らない（`ReportInstructionBuilder.js` に参照なし）。レポートの構造や分量を縛るなら `output_contracts` 側で行う
 
+## permission mode（copilot サブステップ）
+
+copilot サブステップには `required_permission_mode: full` を付ける。copilot CLI は参照パスを realpath 解決し、workspace 外パスには承認を要求するが、非対話 `-p` モードでは拒否になる。`.takt` が symlink のリポジトリでは `{report_dir}` 配下の読み取りがこれに該当する。edit（`--allow-all-tools --no-ask-user`）はツール実行の承認のみでパス承認を含まず、full（`--yolo`）のみが allowAllPaths を含む。takt に `--add-dir` 相当や追加 CLI 引数を渡す設定は存在しない（v0.49.0 時点、`dist/infra/copilot/client.js`）。
+
+- `required_permission_mode` は floor（引き上げ専用）。config の provider profile で権限を下げることはできない（`dist/core/workflow/permission-profile-resolution.js`）
+- グローバル config（`~/.takt/config.yaml`）に `provider_profiles` が無い場合の既定は全 provider `edit`。`provider_profiles` を書くとこのデフォルトフォールバック全体が置換され、書かなかった provider（claude 等）は profile なし扱いで readonly 側に落ちるため注意
+- full は書き込みも許可するが、外側の cage サンドボックス（`.config/cage/presets.yml`）がガードレールとして残る。cage 側の変更は不要
+- 上記は takt v0.49.0 の実装依存。バージョンアップ後は floor 仕様とデフォルトフォールバックを再確認する
+
 ## plan / plan-implement のプラン本文契約
 
 設計成果物の正本は `{report_dir}/plan-document.md`。planner ステップ（design / fix / fix-design）が `edit: true` + `required_permission_mode: edit` で Write/Edit ツールにより直接書く。全文 Write は新規作成と欠損・破損時の再作成に限り、再入時（差し戻し・ゲート失敗）は差分編集する（全文 Write は stdout バッファ超過で run を落とす）。`00-plan.md`（`format: plan` の Phase 2 レポート）は補助的なタスク計画サマリであり正本ではない。

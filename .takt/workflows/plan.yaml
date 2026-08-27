@@ -107,6 +107,7 @@ steps:
         provider: copilot
         model: gpt-5.5
         edit: false
+        required_permission_mode: full
         output_contracts:
           report:
             - name: 02-copilot-review.md

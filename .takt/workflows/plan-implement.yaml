@@ -110,6 +110,7 @@ steps:
         provider: copilot
         model: gpt-5.5
         edit: false
+        required_permission_mode: full
         output_contracts:
           report:
             - name: 02-plan-review-copilot.md
@@ -273,6 +274,7 @@ steps:
         provider: copilot
         model: gpt-5.5
         edit: false
+        required_permission_mode: full
         output_contracts:
           report:
             - name: 13-impl-review-copilot.md
