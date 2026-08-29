@@ -1,0 +1,215 @@
+#!/bin/sh
+# jdk-daemon-doctor: Detect build daemons left running on a replaced JDK.
+#
+# JDK 20+ makes jspawnhelper verify that it matches the parent JVM. When apt
+# replaces openjdk under a running Gradle/Kotlin daemon (dpkg unlinks and
+# renames, so the old inode stays alive only inside the running process), the
+# next process spawn fails with "Failed to exec spawn helper: exit code: 1".
+# Restarting the daemon is the fix; this tool finds the daemons that need it.
+#
+# Usage:
+#   jdk-daemon-doctor                    # Diagnose only
+#   jdk-daemon-doctor --fix              # SIGTERM the stale daemons
+#   jdk-daemon-doctor --fix --quiet      # Report only when something was stopped
+#   sudo jdk-daemon-doctor --install-apt-hook
+#
+# Exit: 0 if clean or repaired, 1 if stale daemons were found (diagnose mode)
+#       or on usage/permission errors
+set -u
+
+# Test seam: point the scan at a fixture tree instead of the live /proc.
+PROC_DIR="${JDD_PROC_DIR:-/proc}"
+
+MARKER_GRADLE='org.gradle.launcher.daemon.bootstrap.GradleDaemon'
+MARKER_KOTLIN='org.jetbrains.kotlin.daemon.KotlinCompileDaemon'
+
+APT_HOOK_PATH="/etc/apt/apt.conf.d/99-jdk-daemon-reset"
+SBIN_PATH="/usr/local/sbin/jdk-daemon-doctor"
+
+FIX=0
+QUIET=0
+INSTALL_HOOK=0
+
+usage() {
+  sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --fix) FIX=1 ;;
+    --quiet) QUIET=1 ;;
+    --install-apt-hook) INSTALL_HOOK=1 ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+# --- Install the apt hook -----------------------------------------------------
+# Root runs a root-owned copy: never let root execute the version under
+# ~/.local/bin, which the desktop user can rewrite.
+if [ "$INSTALL_HOOK" -eq 1 ]; then
+  if [ "$(id -u)" -ne 0 ]; then
+    echo "ERROR: --install-apt-hook writes to /usr/local/sbin and /etc/apt; run it with sudo" >&2
+    exit 1
+  fi
+  SELF=$(readlink -f "$0") || SELF="$0"
+  cp "$SELF" "$SBIN_PATH" || exit 1
+  chown root:root "$SBIN_PATH" && chmod 0755 "$SBIN_PATH" || exit 1
+  cat > "$APT_HOOK_PATH" <<EOF
+// Installed by jdk-daemon-doctor --install-apt-hook.
+// Replacing openjdk under a running Gradle/Kotlin daemon breaks the next
+// process spawn (jspawnhelper version handshake). Stop those daemons here so
+// the following build starts a fresh one on the new JDK.
+DPkg::Post-Invoke { "$SBIN_PATH --fix --quiet || true"; };
+EOF
+  chmod 0644 "$APT_HOOK_PATH" || exit 1
+  echo "installed: $SBIN_PATH"
+  echo "installed: $APT_HOOK_PATH"
+  exit 0
+fi
+
+# --- Inspection helpers -------------------------------------------------------
+
+# Whole command line of a process, NUL separators flattened to spaces.
+# A process that exits mid-scan leaves an unreadable entry; that is expected
+# traffic, not an error worth printing.
+read_cmdline() {
+  [ -r "$PROC_DIR/$1/cmdline" ] || return 1
+  tr '\0' ' ' < "$PROC_DIR/$1/cmdline" 2>/dev/null
+}
+
+# Field 22 (starttime) of /proc/<pid>/stat. Everything up to the comm field's
+# closing paren is dropped first: comm may contain spaces and parens, so
+# counting fields from the left is not safe.
+read_starttime() {
+  _stat=$(cat "$PROC_DIR/$1/stat" 2>/dev/null) || return 1
+  [ -n "$_stat" ] || return 1
+  _rest=${_stat##*") "}
+  [ "$_rest" != "$_stat" ] || return 1
+  echo "$_rest" | awk '{print $20}'
+}
+
+# Emits "<exe_deleted> <jdk_root>" for a java process, or nothing when the
+# process is gone or is not a JVM.
+#
+# The " (deleted)" suffix has to be stripped BEFORE the java check: the exact
+# processes worth finding are the ones whose binary was unlinked, and a raw
+# basename comparison reads "java (deleted)" and drops precisely those.
+classify_exe() {
+  _raw=$(readlink "$PROC_DIR/$1/exe" 2>/dev/null) || return 1
+  [ -n "$_raw" ] || return 1
+  case "$_raw" in
+    *" (deleted)")
+      _path=${_raw%" (deleted)"}
+      _deleted=1
+      ;;
+    *)
+      _path=$_raw
+      _deleted=0
+      ;;
+  esac
+  case "$_path" in
+    */java) ;;
+    *) return 1 ;;
+  esac
+  case "$_path" in
+    */bin/java) _root=${_path%/bin/java} ;;
+    *) _root=$(dirname "$_path") ;;
+  esac
+  echo "$_deleted $_root"
+}
+
+# True when the JVM still maps files that no longer exist, restricted to the
+# process's own JDK: an unrelated glibc upgrade must not cost a daemon.
+maps_deleted_under_root() {
+  grep -F "$2/" "$PROC_DIR/$1/maps" 2>/dev/null | grep -q '(deleted)$'
+}
+
+# True when the process is a build daemon running on a replaced JDK.
+# Prints "<pid> <starttime> <exe>" for stale ones.
+inspect_pid() {
+  _pid=$1
+  _cmd=$(read_cmdline "$_pid")
+  case "$_cmd" in
+    *"$MARKER_GRADLE"* | *"$MARKER_KOTLIN"*) ;;
+    *) return 1 ;;
+  esac
+
+  _class=$(classify_exe "$_pid") || return 1
+  _deleted=${_class%% *}
+  _root=${_class#* }
+
+  if [ "$_deleted" -eq 0 ]; then
+    maps_deleted_under_root "$_pid" "$_root" || return 1
+  fi
+
+  _start=$(read_starttime "$_pid") || return 1
+  echo "$_pid $_start $_root"
+}
+
+# --- Scan ---------------------------------------------------------------------
+STALE=""
+STALE_COUNT=0
+
+for PID_DIR in "$PROC_DIR"/[0-9]*; do
+  [ -d "$PID_DIR" ] || continue
+  PID=${PID_DIR##*/}
+  ENTRY=$(inspect_pid "$PID") || continue
+  STALE="${STALE}${ENTRY}
+"
+  STALE_COUNT=$((STALE_COUNT + 1))
+done
+
+if [ "$STALE_COUNT" -eq 0 ]; then
+  if [ "$QUIET" -eq 0 ]; then
+    echo "No build daemon is running on a replaced JDK."
+  fi
+  exit 0
+fi
+
+if [ "$FIX" -eq 0 ]; then
+  echo "Build daemons running on a replaced JDK:"
+  echo "$STALE" | while IFS=' ' read -r PID START ROOT; do
+    [ -n "$PID" ] || continue
+    printf "  ✗ pid %s  jdk %s\n" "$PID" "$ROOT"
+  done
+  echo "---"
+  echo "$STALE_COUNT daemon(s) need a restart — rerun with --fix"
+  exit 1
+fi
+
+# --- Repair -------------------------------------------------------------------
+# The PID was read from a scan that has already finished. Re-read identity right
+# before signalling so a PID recycled in between is not hit; starttime does not
+# survive PID reuse, which makes it the discriminator. This narrows the window
+# rather than closing it — POSIX sh has no pidfd.
+STOPPED=0
+echo "$STALE" | {
+  while IFS=' ' read -r PID START ROOT; do
+    [ -n "$PID" ] || continue
+    [ "$PID" -gt 1 ] 2>/dev/null || continue
+    [ "$PID" != "$$" ] || continue
+
+    NOW=$(inspect_pid "$PID") || continue
+    NOW_START=$(echo "$NOW" | awk '{print $2}')
+    [ "$NOW_START" = "$START" ] || continue
+
+    if kill -TERM "$PID" 2>/dev/null; then
+      printf "stopped: pid %s on replaced jdk %s\n" "$PID" "$ROOT"
+      STOPPED=$((STOPPED + 1))
+    fi
+  done
+  if [ "$STOPPED" -eq 0 ] && [ "$QUIET" -eq 0 ]; then
+    echo "Nothing stopped — the daemons exited on their own."
+  fi
+}
+
+exit 0

@@ -33,6 +33,7 @@ SYMLINK_FILES=(
   ".claude/rules/sandbox-operations.md"
   ".claude/rules/mcp-config-protection.md"
   ".claude/rules/edit-discipline.md"
+  ".claude/rules/jdk-daemon-mismatch.md"
   ".claude/docs/takt-workflow.md"
   ".claude/docs/faceted-prompting.md"
   ".claude/docs/tsumiki-tdd.md"
