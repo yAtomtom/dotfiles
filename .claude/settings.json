@@ -234,7 +234,7 @@
       "Bash(gh api:*)"
     ]
   },
-  "model": "claude-fable-5",
+  "model": "opus[1m]",
   "hooks": {
     "PreToolUse": [
       {
