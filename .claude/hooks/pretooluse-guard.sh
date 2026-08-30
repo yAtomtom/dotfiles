@@ -23,6 +23,61 @@ EOF
   exit 0
 }
 
+# 実行自体は許可しうるが、毎回ユーザー確認ダイアログを強制する
+# (フック判定の優先順位は deny > ask > allow のため、後段 rtk-guard の allow より ask が勝つ)
+ask() {
+  local reason="$1"
+  cat <<EOF
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "ask",
+    "permissionDecisionReason": "$reason"
+  }
+}
+EOF
+  exit 0
+}
+
+# DB クライアント検出の境界: 区切り文字に加え、フルパス起動 (/)・サブシェル (()・
+# コマンド置換 (`)・エイリアス回避 (\)・改行/タブ ([:space:]) 経由の起動も検出する。
+# 終端は空白・制御演算子・リダイレクト・行末に限定する。クライアント名の後ろが続くパス
+# (docs/mysql_schema.sql 等) は除外されるが、パス末尾がクライアント名と一致する場合
+# (/var/log/mysql 等) はコマンド起動と字句的に区別できないため fail-closed で deny する。
+# mariadb / mycli 等の MySQL 互換クライアントは対象外 (従来から deny していない)
+DB_CLIENT_BOUNDARY='(^|[;|&[:space:](/\\`])'
+DB_CLIENT_TERM='([[:space:];|&)<>]|$)'
+
+# local DB 読み取りの opt-in (プロジェクトの settings env で有効化する汎用機構)
+# 事前条件: 引数のコマンド文字列・env CLAUDE_GUARD_LOCAL_MYSQL_RO_USER・上記定数のみを参照する
+# 事後条件: 0 (許可) は、全 mysql 呼び出しが「mysql --no-defaults -u <RO_USER> -h 127.0.0.1 」の
+#           固定プレフィックスで始まり、接続先を変更しうるオプション・MYSQL_* 環境変数代入を
+#           含まない場合に限る。read-only の強制は本フックではなく DB 権限が担う
+#           (RO_USER は SELECT のみの専用ユーザーであることが運用上の前提)
+is_allowed_local_mysql_ro() {
+  local cmd="$1"
+  local ro_user="${CLAUDE_GUARD_LOCAL_MYSQL_RO_USER:-}"
+  [[ -n "$ro_user" ]] || return 1
+
+  local canonical="mysql --no-defaults -u $ro_user -h 127.0.0.1 "
+  local stripped="${cmd//"$canonical"/__allowed_ro__ }"
+  [[ "$stripped" =~ ${DB_CLIENT_BOUNDARY}mysql[a-z]*${DB_CLIENT_TERM} ]] && return 1
+
+  # 接続先を変更しうる再指定は SQL 文字列内・パイプ後段の誤検知込みで拒否 (fail-closed)
+  [[ "$stripped" =~ (^|[[:space:]])-(h|u|P|S|p) ]] && return 1
+  [[ "$stripped" =~ --(host|user|port|socket|protocol|defaults|login-path|password) ]] && return 1
+  [[ "$stripped" =~ MYSQL_[A-Z_]+= ]] && return 1
+
+  return 0
+}
+
+# Notion: archived/in_trash フラグは update/patch 系ツール経由の実質的な削除を表現できる
+# 事後条件: 0 は tool_input のシリアライズ結果に "archived":true / "in_trash":true を含む場合のみ
+#           (ユーザーコンテンツ内の同一文字列も一致するが fail-closed として許容)
+is_notion_trash_input() {
+  echo "$input" | jq -e '.tool_input | tostring | test("\"(archived|in_trash)\":true")' >/dev/null
+}
+
 # =============================================================================
 # Bash tool
 # =============================================================================
@@ -40,6 +95,14 @@ if [[ "$tool_name" == "Bash" ]]; then
   [[ "$cmd" =~ git\ checkout\ (master|main)(\ |$) ]] && ! [[ "$cmd" =~ git\ checkout\ -b\  ]] && deny "git checkout master/main is blocked by security hook"
   [[ "$cmd" =~ git\ switch\ (master|main)(\ |$) ]]   && deny "git switch master/main is blocked by security hook"
 
+  # --- GitHub への外部書き込み (gh CLI): 毎回ユーザー確認を強制 ---
+  # rtk-guard が gh コマンドを permissionDecision:allow 付きで `rtk gh ...` にリライトし
+  # settings の deny/ask を素通りさせるため、rtk より前段の本フックで ask を返す必要がある。
+  # 部分一致なので `rtk gh ...` / `command gh ...` 形でも一致する
+  [[ "$cmd" =~ gh\ issue\ (create|comment|edit|close|reopen|delete|transfer|develop|pin|unpin|lock|unlock) ]] && ask "gh issue write operation requires explicit user approval"
+  [[ "$cmd" =~ gh\ pr\ (create|comment|review|edit|merge|close|reopen|ready|lock|unlock) ]] && ask "gh pr write operation requires explicit user approval"
+  [[ "$cmd" =~ gh\ api ]] && [[ "$cmd" =~ \ (-X|--method|-f|--field|-F|--raw-field|--input)([\ =]) ]] && ask "gh api with mutation flags (-X/--method/-f/--field/-F/--raw-field/--input) requires explicit user approval"
+
   # --- ネットワーク送信 ---
   [[ "$cmd" =~ (^|[;\|&\ ])curl\  ]]  && deny "curl is blocked by security hook"
   [[ "$cmd" =~ (^|[;\|&\ ])wget\  ]]  && deny "wget is blocked by security hook"
@@ -54,10 +117,12 @@ if [[ "$tool_name" == "Bash" ]]; then
   [[ "$cmd" =~ (^|[;\|&\ ])ftp\  ]]   && deny "ftp is blocked by security hook"
 
   # --- データベースクライアント ---
-  [[ "$cmd" =~ (^|[;\|&\ ])psql ]]    && deny "psql is blocked by security hook"
-  [[ "$cmd" =~ (^|[;\|&\ ])mysql ]]   && deny "mysql is blocked by security hook"
-  [[ "$cmd" =~ (^|[;\|&\ ])mongo ]]   && deny "mongo/mongosh is blocked by security hook"
-  [[ "$cmd" =~ (^|[;\|&\ ])redis-cli ]] && deny "redis-cli is blocked by security hook"
+  # クォート起動 ("mysql" / 'psql' / my"sql") も検出するため、照合にはクォートを除いた文字列を使う
+  cmd_match="${cmd//[\'\"]/}"
+  [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}psql[a-z]*${DB_CLIENT_TERM} ]]    && deny "psql is blocked by security hook"
+  [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}mysql[a-z]*${DB_CLIENT_TERM} ]] && ! is_allowed_local_mysql_ro "$cmd_match" && deny "mysql is blocked by security hook (allowed read-only form: mysql --no-defaults -u <ro_user> -h 127.0.0.1 [db] -e <query>, opt-in via CLAUDE_GUARD_LOCAL_MYSQL_RO_USER)"
+  [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}mongo[a-z]*${DB_CLIENT_TERM} ]]   && deny "mongo/mongosh is blocked by security hook"
+  [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}redis-cli${DB_CLIENT_TERM} ]] && deny "redis-cli is blocked by security hook"
   [[ "$cmd" =~ rails\ (console|c|runner|r)(\ |$) ]] && deny "rails console/runner is blocked by security hook"
 
   # --- 破壊的ファイル操作 ---
@@ -118,24 +183,30 @@ case "$tool_name" in
   *__push_files|*__create_or_update_file|*__delete_file|\
   *__create_repository|*__fork_repository|\
   *__create_branch|*__update_pull_request|*__update_pull_request_branch|\
-  *__issue_write|*__sub_issue_write|\
+  *__create_issue|*__update_issue|*__issue_write|*__sub_issue_write|\
   *__add_issue_comment|*__add_comment_to_pending_review|*__add_reply_to_pull_request_comment|\
-  *__pull_request_review_write|\
+  *__create_pull_request_review|*__pull_request_review_write|\
   *__assign_copilot_to_issue|*__request_copilot_review)
     deny "GitHub write operation requires user confirmation outside of hooks"
     ;;
-  # --- Notion (first-party MCP) ---
-  *__notion-create-pages|*__notion-update-page|*__notion-move-pages|\
-  *__notion-duplicate-page|*__notion-create-database|\
-  *__notion-update-data-source|*__notion-create-comment)
-    deny "Notion write operation requires user confirmation outside of hooks"
+  # --- Notion 削除系: Level 3 = アクセス不可 ---
+  # Raw API (mcp__notion__) の API-* は OpenAPI 由来の汎用名のためサーバー名で限定する。
+  # first-party の notion-* はサーバー名の表記揺れに対し fail-closed になるよう限定しない
+  *__notion-delete-*|mcp__notion__API-delete-*)
+    deny "Notion destructive operation is blocked by security hook"
     ;;
-  # --- Notion (Raw API) write/destructive ---
-  *__API-patch-block-children|*__API-update-a-block|*__API-delete-a-block|\
-  *__API-patch-page|*__API-post-page|*__API-move-page|\
-  *__API-create-a-comment|\
-  *__API-create-a-data-source|*__API-update-a-data-source)
-    deny "Notion Raw API write/destructive operation requires user confirmation outside of hooks"
+  # --- Notion (first-party MCP) write: Level 2 = 承認のうえ実行可 ---
+  # ツール名の列挙ではなく動詞 glob で照合し、新ツール追加時の素通りを防ぐ
+  *__notion-create-*|*__notion-update-*|*__notion-move-pages|\
+  *__notion-duplicate-page|*__notion-convert-page-to-skill)
+    is_notion_trash_input && deny "Notion write with archived/in_trash flag is blocked by security hook"
+    ask "Notion write operation requires explicit user approval"
+    ;;
+  # --- Notion (Raw API) write: Level 2 ---
+  mcp__notion__API-create-*|mcp__notion__API-update-*|mcp__notion__API-patch-*|\
+  mcp__notion__API-post-*|mcp__notion__API-move-*)
+    is_notion_trash_input && deny "Notion Raw API write with archived/in_trash flag is blocked by security hook"
+    ask "Notion Raw API write operation requires explicit user approval"
     ;;
   # --- Figma ---
   *__create_design_system_rules|*__add_code_connect_map|\

@@ -28,7 +28,7 @@
 
 ## Level 2: 確認許可が必要（承認後にアクセス可能）
 
-書き込み操作。実行前に対象ページ・内容をユーザーに提示し、承認を得ること。
+書き込み操作。PreToolUse hook（`pretooluse-guard.sh`）が `ask` を返し、ハーネスの許可プロンプトでユーザーが実行ごとに承認する。実行前に対象ページ・内容をユーザーに提示することは引き続き行う。
 
 | ツール | 用途 | 確認すべき内容 |
 |---|---|---|
@@ -39,6 +39,13 @@
 | `notion-create-database` | DB作成 | 親ページ、スキーマ |
 | `notion-update-data-source` | データソース更新 | 対象、変更内容 |
 | `notion-create-comment` | コメント追加 | 対象ページ、コメント全文 |
+| `notion-create-view` | ビュー作成 | 対象DB、ビュー種別・設定 |
+| `notion-update-view` | ビュー更新 | 対象ビュー、変更内容 |
+| `notion-create-folder` | フォルダ作成 | 親、フォルダ名 |
+| `notion-update-folder` | フォルダ更新 | 対象フォルダ、変更内容 |
+| `notion-create-attachment` | 添付作成 | アップロード元（パス/URL）と内容、機密ファイル・secret を含まないこと |
+| `notion-create-file-upload` | ファイルアップロード | アップロード元（パス/URL）と内容、機密ファイル・secret を含まないこと |
+| `notion-convert-page-to-skill` | ページのスキル変換 | 変換対象ページ、生成先 |
 | `API-patch-block-children` | ブロック追加 | 対象ブロック、追加内容 |
 | `API-update-a-block` | ブロック更新 | 対象ブロック、変更内容 |
 | `API-patch-page` | ページプロパティ更新 | 対象ページ、変更内容 |
@@ -48,13 +55,15 @@
 | `API-update-a-data-source` | データソース更新 | 対象、変更内容 |
 | `API-move-page` | ページ移動 | 対象、移動先 |
 
-## Level 3: アクセス不可（ユーザーが明示的に指示した場合のみ）
+## Level 3: アクセス不可
 
-不可逆な破壊操作。ユーザーの明示的な指示がない限り実行しない。
+破壊操作。PreToolUse hook が無条件に deny するため、ユーザーが明示的に指示しても MCP ツール経由では実行できない。実行が必要な場合は Notion UI での操作を案内すること。
 
 | ツール | 用途 |
 |---|---|
 | `API-delete-a-block` | ブロックの削除 |
+
+delete 系ツールに加え、update/patch 系ツールでも `archived` / `in_trash` フラグを true にする入力は実質的な削除として hook が deny する。
 
 ## 運用上の注意
 

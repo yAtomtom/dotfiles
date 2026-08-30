@@ -125,7 +125,7 @@ MCP の書き込み操作 (Notion / Slack / Figma / GitHub 等で「create」「
 - Figma: `.claude/docs/mcp/figma.md` — ツール選択と制約
 - context7: `.claude/docs/mcp/context7.md` — ライブラリ ID / バージョン特定手順
 
-PreToolUse hook (`pretooluse-guard.sh`) が代表的な書き込みツールを deny するが、これは二重防御の片側であり、ガイダンス確認は省略しない。
+PreToolUse hook (`pretooluse-guard.sh`) が代表的な書き込みツールを制御する（Slack / GitHub / Figma は deny、Notion は Level 2 が ask・削除系と archived/in_trash フラグ入力が deny）。これは二重防御の片側であり、ガイダンス確認は省略しない。
 
 ## rtk (Rust Token Killer)
 
