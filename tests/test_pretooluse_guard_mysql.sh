@@ -175,6 +175,28 @@ done
 OUT=$(run_hook "mariadb -h db.example.com -e 'select 1'")
 assert_eq "pass through: mariadb (known limit, out of scope)" "" "$OUT"
 
+# --- Test 8: git commit のメッセージ本文は字句一致の対象外 ---
+echo ""
+echo "=== Test 8: commit message is not a command → pass through ==="
+
+# 変更を説明するためにコマンド名やパスを引用するのは正常なユースケース
+for cmd in \
+  "git commit -m 'fix(guard): \"mysql\" のクォート起動を検出する'" \
+  "git commit -m 'docs: psql と redis-cli の deny 理由を追記'" \
+  "git commit -m 'test: mongo の検出境界を固定' -m 'redis-cli も同様'" \
+  "git commit -m 'chore: ~/.ssh/config の取り扱いを明記'"; do
+  OUT=$(run_hook "$cmd")
+  assert_eq "pass through: $cmd" "" "$OUT"
+done
+
+# 既知のトレードオフ: git commit で始まる連結は後段も除外される (許容済み)
+OUT=$(run_hook "git commit -m 'x' && mysql -h db.example.com -e 'select 1'")
+assert_eq "pass through: chained after git commit (known trade-off)" "" "$OUT"
+
+# commit 以外の git サブコマンドは除外されない
+OUT=$(run_hook "git log --grep 'mysql'")
+assert_eq "deny: git log --grep mysql (not a commit)" "deny" "$(echo "$OUT" | decision)"
+
 # --- Summary ---
 echo ""
 echo "=== Results ==="

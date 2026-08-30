@@ -71,6 +71,13 @@ is_allowed_local_mysql_ro() {
   return 0
 }
 
+# git commit のメッセージ本文は実行内容ではないため、字句一致による deny の対象外とする
+# (禁止コマンド名やパス文字列を引用して変更を説明するのは正常なユースケース)
+# 既知のトレードオフ: `git commit -m "x" && <禁止コマンド>` の連結も除外される
+is_git_commit() {
+  [[ "$1" =~ ^git\ (commit|memento\ commit) ]]
+}
+
 # Notion: archived/in_trash フラグは update/patch 系ツール経由の実質的な削除を表現できる
 # 事後条件: 0 は tool_input のシリアライズ結果に "archived":true / "in_trash":true を含む場合のみ
 #           (ユーザーコンテンツ内の同一文字列も一致するが fail-closed として許容)
@@ -117,13 +124,15 @@ if [[ "$tool_name" == "Bash" ]]; then
   [[ "$cmd" =~ (^|[;\|&\ ])ftp\  ]]   && deny "ftp is blocked by security hook"
 
   # --- データベースクライアント ---
-  # クォート起動 ("mysql" / 'psql' / my"sql") も検出するため、照合にはクォートを除いた文字列を使う
-  cmd_match="${cmd//[\'\"]/}"
-  [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}psql[a-z]*${DB_CLIENT_TERM} ]]    && deny "psql is blocked by security hook"
-  [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}mysql[a-z]*${DB_CLIENT_TERM} ]] && ! is_allowed_local_mysql_ro "$cmd_match" && deny "mysql is blocked by security hook (allowed read-only form: mysql --no-defaults -u <ro_user> -h 127.0.0.1 [db] -e <query>, opt-in via CLAUDE_GUARD_LOCAL_MYSQL_RO_USER)"
-  [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}mongo[a-z]*${DB_CLIENT_TERM} ]]   && deny "mongo/mongosh is blocked by security hook"
-  [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}redis-cli${DB_CLIENT_TERM} ]] && deny "redis-cli is blocked by security hook"
-  [[ "$cmd" =~ rails\ (console|c|runner|r)(\ |$) ]] && deny "rails console/runner is blocked by security hook"
+  if ! is_git_commit "$cmd"; then
+    # クォート起動 ("mysql" / 'psql' / my"sql") も検出するため、照合にはクォートを除いた文字列を使う
+    cmd_match="${cmd//[\'\"]/}"
+    [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}psql[a-z]*${DB_CLIENT_TERM} ]]    && deny "psql is blocked by security hook"
+    [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}mysql[a-z]*${DB_CLIENT_TERM} ]] && ! is_allowed_local_mysql_ro "$cmd_match" && deny "mysql is blocked by security hook (allowed read-only form: mysql --no-defaults -u <ro_user> -h 127.0.0.1 [db] -e <query>, opt-in via CLAUDE_GUARD_LOCAL_MYSQL_RO_USER)"
+    [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}mongo[a-z]*${DB_CLIENT_TERM} ]]   && deny "mongo/mongosh is blocked by security hook"
+    [[ "$cmd_match" =~ ${DB_CLIENT_BOUNDARY}redis-cli${DB_CLIENT_TERM} ]] && deny "redis-cli is blocked by security hook"
+    [[ "$cmd" =~ rails\ (console|c|runner|r)(\ |$) ]] && deny "rails console/runner is blocked by security hook"
+  fi
 
   # --- 破壊的ファイル操作 ---
   [[ "$cmd" =~ (^|[;\|&\ ])rm\  ]]    && deny "rm is blocked by security hook"
@@ -162,8 +171,7 @@ if [[ "$tool_name" == "Bash" ]]; then
   [[ "$cmd" =~ helm\ uninstall ]]                 && deny "helm uninstall is blocked by security hook"
 
   # --- 機密ファイルへのアクセス ---
-  # git commit のメッセージ内にパス文字列が含まれる場合の false positive を除外
-  if ! [[ "$cmd" =~ ^git\ (commit|memento\ commit) ]]; then
+  if ! is_git_commit "$cmd"; then
     SENSITIVE_PATHS='(\.ssh/|\.aws/|\.gnupg/|\.config/gcloud/|\.kube/|\.docker/|\.netrc$|\.npmrc$|\.pypirc$|config/master\.key|config/credentials|\.env(\.|$))'
     [[ "$cmd" =~ $SENSITIVE_PATHS ]] && deny "Access to sensitive path is blocked by security hook"
   fi
