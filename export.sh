@@ -20,6 +20,12 @@ for var in ORG_REPO GCP_PROJECT GCP_KEY_FILE ORG_CA_CERT SLACK_MCP_NAME SLACK_TE
   fi
 done
 
+case "$ORG_REPO" in
+  */*) ;;
+  *) echo "ERROR: ORG_REPO must be in owner/repo form: $ORG_REPO"; exit 1 ;;
+esac
+REPO="${ORG_REPO#*/}"
+
 # .copilot/config.json のトークン除去に python3 を使用する
 if ! command -v python3 >/dev/null 2>&1; then
   echo "ERROR: python3 is required to sanitize .copilot/config.json"
@@ -64,9 +70,12 @@ sys.stdout.write("\n")
 }
 
 # パス→プレースホルダー置換（全 template ファイル共通）
+# REPO は ORG_REPO の真部分文字列なので ORG_REPO より後に置く（先だと {{ORG_REPO}} 側が
+# マッチせず org 名が残る）。短い単語の無制限置換で散文ファイルを壊さないようパスでアンカーする
 apply_placeholders() {
   sed -e "s|$HOME|{{HOME}}|g" \
       -e "s|$ORG_REPO|{{ORG_REPO}}|g" \
+      -e "s|/$REPO-dotfiles|/{{REPO}}-dotfiles|g" \
       -e "s|$GCP_PROJECT|{{GCP_PROJECT}}|g" \
       -e "s|$GCP_KEY_FILE|{{GCP_KEY_FILE}}|g" \
       -e "s|$ORG_CA_CERT|{{ORG_CA_CERT}}|g" \

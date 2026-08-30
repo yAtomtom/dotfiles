@@ -22,6 +22,12 @@ for var in ORG_REPO GCP_PROJECT GCP_KEY_FILE ORG_CA_CERT SLACK_MCP_NAME SLACK_TE
   fi
 done
 
+case "$ORG_REPO" in
+  */*) ;;
+  *) echo "ERROR: ORG_REPO must be in owner/repo form: $ORG_REPO"; exit 1 ;;
+esac
+REPO="${ORG_REPO#*/}"
+
 # symlink 対象
 SYMLINK_FILES=(
   ".claude/CLAUDE.md"
@@ -196,6 +202,7 @@ for f in "${TEMPLATE_FILES[@]}"; do
   [ -L "$HOME/$f" ] && rm "$HOME/$f"
   if sed -e "s|{{HOME}}|$HOME|g" \
          -e "s|{{ORG_REPO}}|$ORG_REPO|g" \
+         -e "s|{{REPO}}|$REPO|g" \
          -e "s|{{GCP_PROJECT}}|$GCP_PROJECT|g" \
          -e "s|{{GCP_KEY_FILE}}|$GCP_KEY_FILE|g" \
          -e "s|{{ORG_CA_CERT}}|$ORG_CA_CERT|g" \

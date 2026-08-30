@@ -38,7 +38,9 @@ mcp-doctor /path/to/.mcp.json  # 指定ファイル
 
 ### プレースホルダー
 
-`{{HOME}}`, `{{ORG_REPO}}`, `{{GCP_PROJECT}}`, `{{GCP_KEY_FILE}}`, `{{ORG_CA_CERT}}`, `{{SLACK_MCP_NAME}}`, `{{SLACK_TEST_CHANNEL}}` — 新規追加時は `install.sh`, `export.sh`, `.env.example` の3箇所を更新する。
+`{{HOME}}`, `{{ORG_REPO}}`, `{{REPO}}`, `{{GCP_PROJECT}}`, `{{GCP_KEY_FILE}}`, `{{ORG_CA_CERT}}`, `{{SLACK_MCP_NAME}}`, `{{SLACK_TEST_CHANNEL}}` — 新規追加時は `install.sh`, `export.sh`, `.env.example` の3箇所を更新する。
+
+`{{REPO}}` は `.env` には持たず `ORG_REPO` の repo 部から導出する（`${ORG_REPO#*/}`）。`export.sh` の逆置換は `ORG_REPO` の行より後に置くこと。`REPO` は `ORG_REPO` の真部分文字列のため、先に置換すると `{{ORG_REPO}}` 側がマッチせず org 名がリポジトリに残る。
 
 ### ファイル管理ルール
 

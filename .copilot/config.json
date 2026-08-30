@@ -13,6 +13,7 @@
   "trustedFolders": [
     "{{HOME}}/github.com/{{ORG_REPO}}",
     "{{HOME}}/github.com/{{ORG_REPO}}-dotfiles",
+    "{{HOME}}/github.com/yAtomtom/{{REPO}}-dotfiles",
     "{{HOME}}/github.com/yAtomtom/youtube-chat-rearranger",
     "{{HOME}}/github.com/yAtomtom/tech-talks"
   ],
