@@ -5,7 +5,7 @@ provider_options:
   claude:
     effort: max
   copilot:
-    effort: high
+    effort: xhigh
 # plan / plan-implement の command quality gate（plan-document-complete）の実行許可。
 # 未設定だと command 型 quality gate はロード時にデフォルト拒否される
 workflow_command_gates:

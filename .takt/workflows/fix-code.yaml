@@ -75,7 +75,7 @@ steps:
         policy: [design, coding]
         knowledge: output-volume
         provider: copilot
-        model: gpt-5.5
+        model: gpt-5.6-terra
         edit: false
         required_permission_mode: full
         output_contracts:
