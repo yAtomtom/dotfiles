@@ -20,7 +20,7 @@
 ## レビュー実行コマンド
 
 ```bash
-command copilot --model "gpt-5.6-terra" --effort "max" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<対象ファイル名> をレビューしてください"
+command copilot --model "gpt-5.6-sol" --effort "max" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<対象ファイル名> をレビューしてください"
 ```
 
 ## 判定の扱い
