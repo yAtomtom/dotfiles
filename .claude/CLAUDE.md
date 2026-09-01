@@ -63,7 +63,7 @@
 
 | 実行者 | 出力先 | レビュアー | コマンド |
 |--------|--------|------------|----------|
-| Claude | `~/claude-sandbox/` | Copilot | `command copilot --model "gpt-5.5" --effort "xhigh" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<出力ファイル名> をレビューしてください"` |
+| Claude | `~/claude-sandbox/` | Copilot | `command copilot --model "gpt-5.6-terra" --effort "max" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<出力ファイル名> をレビューしてください"` |
 | Copilot | `~/copilot-sandbox/` | Claude | `command claude -p "~/copilot-sandbox/<出力ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
 
 ## 実行の手順
