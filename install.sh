@@ -78,6 +78,7 @@ SYMLINK_FILES=(
   ".claude/agents/planner-frontend.md"
   ".claude/agents/developer.md"
   ".claude/agents/tester.md"
+  ".claude/agents/address.md"
   ".claude/agents/tsumiki-analyzer.md"
   ".claude/agents/tsumiki-req-writer.md"
   ".claude/agents/tsumiki-test-writer.md"
