@@ -3,6 +3,7 @@ description: "DDDのコンテキスト設計・目的駆動による機能整理
 persona: software-architect
 policies:
   - design-philosophy
+  - comment-policy
   - no-production-modify
   - report-language-ja
 knowledge:

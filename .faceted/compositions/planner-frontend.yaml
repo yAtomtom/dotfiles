@@ -3,6 +3,7 @@ description: "フロントエンドのUI設計・操作フロー設計・宣言�
 persona: software-architect
 policies:
   - design-philosophy
+  - comment-policy
   - no-production-modify
   - report-language-ja
 knowledge:

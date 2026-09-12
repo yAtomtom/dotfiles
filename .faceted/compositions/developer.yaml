@@ -3,6 +3,7 @@ description: "設計ドキュメントに基づきKISS原則と関数型プロ�
 persona: code-practitioner
 policies:
   - design-philosophy
+  - comment-policy
   - raw-data-now
   - report-language-ja
 knowledge:

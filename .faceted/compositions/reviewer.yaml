@@ -3,6 +3,7 @@ description: "品質・セキュリティ・パフォーマンスの観点から
 persona: code-reviewer
 policies:
   - design-philosophy
+  - comment-policy
   - no-production-modify
   - report-language-ja
 knowledge:

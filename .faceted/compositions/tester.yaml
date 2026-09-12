@@ -3,6 +3,7 @@ description: "テストコードの作成・テスト実行・Linter/Formatter�
 persona: code-practitioner
 policies:
   - design-philosophy
+  - comment-policy
   - raw-data-now
   - no-production-modify
   - report-language-ja

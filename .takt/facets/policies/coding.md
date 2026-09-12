@@ -8,14 +8,14 @@
 
 ## DRY
 - Apply DRY only with proper abstraction; otherwise allow duplication
-- Three similar lines beat a premature abstraction
 
 ## Raw Data Now
 - Fallbacks are unnecessary and hide symptoms; never use them (`?? 'unknown'`) for required data
 - Show raw data unformatted; fail fast, never hide data flow
 
-## Comments
+## Code Comments
 - State business context code cannot convey; nothing self-evident from naming/tests
+- Never cite line numbers; cite headings or symbol names
 
 ## Command Execution Safety (Headless)
 - No TTY and stdin is closed; every command must terminate on its own
