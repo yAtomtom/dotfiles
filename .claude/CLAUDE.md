@@ -56,16 +56,16 @@
 ## サンドボックス
 - 設計ドキュメントや一時的な出力ファイルは自身のサンドボックスに配置せよ
   - Claude: `~/claude-sandbox/`
-  - Copilot: `~/copilot-sandbox/`
 - ファイル名はタスクの内容が識別できる命名にせよ（例: `design_<feature_name>.md`）
 
 ### クロスレビュー
-チェックリストの指定タイミングにて，対となるエージェントによるレビューを実行せよ。
+チェックリストの指定タイミングにて，別セッションのエージェントによるレビューを実行せよ。
 
 | 実行者 | 出力先 | レビュアー | コマンド |
 |--------|--------|------------|----------|
-| Claude | `~/claude-sandbox/` | Copilot | `command copilot --model "gpt-5.6-terra" --effort "xhigh" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<出力ファイル名> をレビューしてください"` |
-| Copilot | `~/copilot-sandbox/` | Claude | `command claude -p "~/copilot-sandbox/<出力ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
+| Claude | `~/claude-sandbox/` | Claude（別セッション） | `command claude -p "~/claude-sandbox/<出力ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
+
+Copilot は使用上限のため実行停止中（`rules/copilot-quota-guard.md`）。`copilot` 系コマンドを実行しない。
 
 ## 実行の手順
 

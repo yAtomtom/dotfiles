@@ -115,7 +115,6 @@ production codeの変更は禁止。変更は別のエージェントに委ね�
 | エージェント | 出力先 |
 |-------------|--------|
 | Claude | `~/claude-sandbox/` |
-| Copilot | `~/copilot-sandbox/` |
 
 - ファイル名はタスクの内容が識別できる命名にする（例: `design_<feature_name>.md`）
 
@@ -123,8 +122,9 @@ production codeの変更は禁止。変更は別のエージェントに委ね�
 
 | 実行者 | レビュアー | コマンド |
 |--------|------------|----------|
-| Claude | Copilot | `command copilot --model "gpt-5.6-terra" --effort "xhigh" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<ファイル名> をレビューしてください"` |
-| Copilot | Claude | `command claude -p "~/copilot-sandbox/<ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
+| Claude | Claude（別セッション） | `command claude -p "~/claude-sandbox/<ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
+
+Copilot は使用上限のため実行停止中（`rules/copilot-quota-guard.md`）。`copilot` 系コマンドを実行しない。
 
 ## Instruction
 
