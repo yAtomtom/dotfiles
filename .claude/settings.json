@@ -148,6 +148,12 @@
       "Bash(az:*)",
       "Bash(curl|sh)",
       "Bash(wget|sh)",
+      "Bash(copilot:*)",
+      "Bash(command copilot:*)",
+      "Bash(copilot_base:*)",
+      "Bash(copilot-s:*)",
+      "Bash(copilot-m:*)",
+      "Bash(/opt/homebrew/bin/copilot:*)",
       "Bash(xattr -w *)",
       "Bash(xattr -d *)",
       "Bash(xattr -c *)",
@@ -251,6 +257,15 @@
           {
             "type": "command",
             "command": "$HOME/.claude/hooks/pretooluse-guard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/pretooluse-copilot-guard.sh"
           }
         ]
       },
