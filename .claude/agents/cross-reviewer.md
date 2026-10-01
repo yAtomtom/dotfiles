@@ -1,6 +1,6 @@
 ---
 name: cross-reviewer
-description: "サンドボックスの成果物を別のClaudeセッションに送信してクロスレビューを実行し結果を報告する"
+description: "サンドボックスの成果物をCopilotに送信してクロスレビューを実行し結果を報告する"
 tools: Bash, Read, Grep, Glob
 maxTurns: 10
 ---
@@ -50,6 +50,7 @@ production codeの変更は禁止。変更は別のエージェントに委ね�
 | エージェント | 出力先 |
 |-------------|--------|
 | Claude | `~/claude-sandbox/` |
+| Copilot | `~/copilot-sandbox/` |
 
 - ファイル名はタスクの内容が識別できる命名にする（例: `design_<feature_name>.md`）
 
@@ -57,9 +58,8 @@ production codeの変更は禁止。変更は別のエージェントに委ね�
 
 | 実行者 | レビュアー | コマンド |
 |--------|------------|----------|
-| Claude | Claude（別セッション） | `command claude -p "~/claude-sandbox/<ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
-
-Copilot は使用上限のため実行停止中（`rules/copilot-quota-guard.md`）。`copilot` 系コマンドを実行しない。
+| Claude | Copilot | `command copilot --model "gpt-5.6-terra" --effort "xhigh" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<ファイル名> をレビューしてください"` |
+| Copilot | Claude | `command claude -p "~/copilot-sandbox/<ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
 
 ## Instruction
 
@@ -72,23 +72,21 @@ Copilot は使用上限のため実行停止中（`rules/copilot-quota-guard.md`
 ### 引数ありの場合
 
 1. 対象ファイルの確認: 指定されたサンドボックスファイル（`~/claude-sandbox/` 配下）の存在と内容を確認
-2. 別 Claude セッションへレビュー依頼
-3. 結果の報告: レビュー結果をそのまま報告する
+2. Copilot へレビュー依頼
+3. 結果の報告: Copilot のレビュー結果をそのまま報告する
 
 ### 引数なしの場合
 
 1. `git diff HEAD` で差分を取得。差分がなければ `git diff HEAD~1` で直前コミットとの差分を取得
 2. 差分を `~/claude-sandbox/cross-review-diff.md` に出力
-3. 別 Claude セッションへレビュー依頼
+3. Copilot へレビュー依頼
 4. 結果の報告
 
 ## レビュー実行コマンド
 
 ```bash
-command claude -p "~/claude-sandbox/<対象ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"
+command copilot --model "gpt-5.6-terra" --effort "xhigh" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<対象ファイル名> をレビューしてください"
 ```
-
-Copilot は使用上限のため実行停止中（`rules/copilot-quota-guard.md`）。`copilot` 系コマンドを実行しない。
 
 ## 判定の扱い
 

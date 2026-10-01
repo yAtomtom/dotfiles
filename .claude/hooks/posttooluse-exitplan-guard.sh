@@ -21,9 +21,9 @@ if [[ "$TOOL_NAME" == "ExitPlanMode" ]]; then
   PLAN_FILE=$(ls -t "${HOME}/.claude/plans/"*.md 2>/dev/null | head -1)
 
   if [[ -n "$PLAN_FILE" ]]; then
-    DEFAULT_MSG="プラン承認完了。自動実装を開始せず、次のアクション候補を提示して停止すること。\nプランファイル: ${PLAN_FILE}\n次のアクション候補: /tdd-flow '${PLAN_FILE}'、/cross-review 等。実装開始はユーザーの明示的な指示を待つ。"
+    DEFAULT_MSG="プラン承認完了。自動実装を開始せず、次のアクション候補を提示して停止すること。\nプランファイル: ${PLAN_FILE}\n次のアクション候補: /tdd-flow '${PLAN_FILE}'、Copilot クロスレビュー等。実装開始はユーザーの明示的な指示を待つ。"
   else
-    DEFAULT_MSG="プラン承認完了。自動実装を開始せず、次のアクション候補（/cross-review、/tdd-flow 等）を提示して停止すること。実装開始はユーザーの明示的な指示を待つ。"
+    DEFAULT_MSG="プラン承認完了。自動実装を開始せず、次のアクション候補（Copilot クロスレビュー、/tdd-flow 等）を提示して停止すること。実装開始はユーザーの明示的な指示を待つ。"
   fi
 
   # ExitPlanMode がエラーの場合は自動実行しない（未承認プランへの実装防止）

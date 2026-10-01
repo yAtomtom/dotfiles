@@ -43,6 +43,7 @@ maxTurns: 20
 | エージェント | 出力先 |
 |-------------|--------|
 | Claude | `~/claude-sandbox/` |
+| Copilot | `~/copilot-sandbox/` |
 
 - ファイル名はタスクの内容が識別できる命名にする（例: `design_<feature_name>.md`）
 
@@ -50,9 +51,8 @@ maxTurns: 20
 
 | 実行者 | レビュアー | コマンド |
 |--------|------------|----------|
-| Claude | Claude（別セッション） | `command claude -p "~/claude-sandbox/<ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
-
-Copilot は使用上限のため実行停止中（`rules/copilot-quota-guard.md`）。`copilot` 系コマンドを実行しない。
+| Claude | Copilot | `command copilot --model "gpt-5.6-terra" --effort "xhigh" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<ファイル名> をレビューしてください"` |
+| Copilot | Claude | `command claude -p "~/copilot-sandbox/<ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
 
 ### react-quality-standards
 
@@ -137,7 +137,7 @@ PR番号が特定できた場合、以下の2つのAPIで全コメントを取�
 
 ### 3. クロスレビュー
 
-判定表を `~/claude-sandbox/` に出力し、別 Claude セッションにクロスレビューを実行する。
+判定表を `~/claude-sandbox/` に出力し、Copilotにクロスレビューを実行する。
 - 判定が一致: 確認不要でそのまま進行
 - 判定が分かれた場合: ユーザーに提示し確認を取る
 - 修正対象が0件の場合: クロスレビューをスキップ
