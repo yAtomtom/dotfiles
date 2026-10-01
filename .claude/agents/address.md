@@ -51,7 +51,7 @@ maxTurns: 20
 
 | 実行者 | レビュアー | コマンド |
 |--------|------------|----------|
-| Claude | Copilot | `command copilot --model "gpt-5.6-sol" --effort "max" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<ファイル名> をレビューしてください"` |
+| Claude | Copilot | `command copilot --model "gpt-6.1-sol" --effort "max" --add-dir $HOME/claude-sandbox/ -p "~/claude-sandbox/<ファイル名> をレビューしてください"` |
 | Copilot | Claude | `command claude -p "~/copilot-sandbox/<ファイル名> をレビューしてください" --allowedTools "Read,Glob,Grep"` |
 
 ### react-quality-standards
