@@ -48,7 +48,7 @@ takt（TAKT Agent Koordination Topology）のカスタムワークフロー定�
 主処理 → cross-review（並列: claude + copilot） → fix → supervise → COMPLETE
 ```
 
-- **cross-review**: claude と copilot（gpt-5.6-terra）が並列でレビュー
+- **cross-review**: claude と copilot（gpt-5.6-sol）が並列でレビュー
 - **fix**: レビュー指摘に基づく修正（cross-review → fix のループは `loop_monitors` で最大3回）
 - **supervise**: 最終検証・承認（COMPLETE or 差し戻し）
 
