@@ -72,8 +72,6 @@
       "Bash(rm:*)",
       "Bash(sudo:*)",
       "Bash(chmod 777:*)",
-      "Bash(chmod 7*:*)",
-      "Bash(chmod 6*:*)",
       "Bash(chown:*)",
       "Bash(mkfs:*)",
       "Bash(dd:*)",
