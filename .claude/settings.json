@@ -245,6 +245,15 @@
         ]
       },
       {
+        "matcher": "mcp__github-app__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/pretooluse-mcp-github-read-allow.sh"
+          }
+        ]
+      },
+      {
         "hooks": [
           {
             "type": "command",

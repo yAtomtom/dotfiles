@@ -49,6 +49,7 @@ SYMLINK_FILES=(
   ".claude/docs/mcp/figma.md"
   ".claude/hooks/pretooluse-guard.sh"
   ".claude/hooks/pretooluse-planmode-bash-allow.sh"
+  ".claude/hooks/pretooluse-mcp-github-read-allow.sh"
   ".claude/hooks/git-memento-rewrite.sh"
   ".claude/hooks/rtk-rewrite.sh"
   ".claude/hooks/rtk-guard.sh"
